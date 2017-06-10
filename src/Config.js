@@ -1,5 +1,8 @@
 export default class Config {
     constructor (config) {
-        console.log(config)
+        this.config = config
+
+
+        console.log(this.config)
     }
 }

@@ -10,7 +10,9 @@
   ],
   "main": "src/Timer.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --require test/support/env --reporter spec --bail --check-leaks test/",
+    "test-ci": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --require test/support/env --reporter spec --check-leaks test/",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --require test/support/env --reporter dot --check-leaks test/"
   },
   "repository": {
     "type": "git",
@@ -27,6 +29,9 @@
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
-    "babel-preset-node6": "^11.0.0"
+    "babel-preset-node6": "^11.0.0",
+    "mocha": "^3.4.2",
+    "should": "^11.2.1",
+    "istanbul": "^0.4.5"
   }
 }
