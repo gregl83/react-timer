@@ -8,7 +8,7 @@
     "timer",
     "event"
   ],
-  "main": "index.js",
+  "main": "src/Timer.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -25,5 +25,8 @@
   "dependencies": {
     "react-native-background-timer": "^1.0.2"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-preset-node6": "^11.0.0"
+  }
 }
