@@ -31,6 +31,21 @@ describe('Timer', () => {
             }, 250)
         })
 
+        it('ticked event emitted', done => {
+            let timer = new Timer
+
+            let ticked = sinon.spy()
+
+            timer.addListener('ticked', ticked)
+
+            timer.start()
+
+            setTimeout(() => {
+                should(ticked.called).be.true()
+                done()
+            }, 250)
+        })
+
         it('paused event emitted', done => {
             let timer = new Timer
 

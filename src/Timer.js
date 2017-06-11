@@ -1,16 +1,15 @@
 import { EventEmitter } from "fbemitter"
 import Config from "./Config"
-import Timeout from "./Timeout"
+import Interval from "./Interval"
 
 export default class Timer extends EventEmitter {
     constructor (config) {
         super()
 
         this.config = new Config(config)
-        this.timeout = new Timeout()
+        this.interval = new Interval
 
         this.props = {
-            tick: 200,
             time: null, // todo consider config
             elapsed: 0,
             startDate: null,
@@ -50,6 +49,10 @@ export default class Timer extends EventEmitter {
     }
     is (state) {
         return (this.props.state & state) === state
+    }
+    tick () {
+        // todo tick
+        this.emit('ticked')
     }
     start () {
         if (this.is(Timer.states.READY) && !this.is(Timer.states.STARTED)) {
