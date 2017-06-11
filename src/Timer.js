@@ -52,18 +52,36 @@ export default class Timer extends EventEmitter {
         return (this.props.state & state) === state
     }
     start () {
-        this.timeout.set(() => console.log("done"), this.props.tick)
+        if (this.is(Timer.states.READY) && !this.is(Timer.states.STARTED)) {
+            //this.timeout.set(() => console.log("done"), this.props.tick)
+            // fixme start timer
+            this.state = Timer.states.STARTED
+            this.emit('started')
+        }
     }
     pause () {
-
+        if (this.is(Timer.states.STARTED) && !this.is(Timer.states.PAUSED)) {
+            // fixme pause timer
+            this.state = Timer.states.PAUSED
+            this.emit('paused')
+        }
     }
     skip () {
 
     }
     stop () {
-
+        if (this.is(Timer.states.STARTED) && !this.is(Timer.states.STOPPED)) {
+            // fixme stop timer
+            this.state = Timer.states.STOPPED
+            this.emit('stopped')
+        }
     }
     reset () {
-
+        if (this.is(Timer.states.STARTED)) {
+            this.stop()
+            // fixme reset timer
+            this.state = Timer.states.READY
+            this.emit('reset')
+        }
     }
 }
