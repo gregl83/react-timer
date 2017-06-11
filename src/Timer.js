@@ -5,18 +5,16 @@ export default class Timer {
     constructor (config) {
         this.config = new Config(config)
         this.timeout = new Timeout()
-
-        this.tick = 200
-        this.time = null // todo consider config
-        this.elapsed = 0
-        this.startDate = null
-        this.started = false
-        this.paused = false
-        this.stopped = false
-
+        this.props = {
+            tick: 200,
+            time: null, // todo consider config
+            elapsed: 0,
+            startDate: null,
+            running: false,
+        }
     }
     start () {
-        this.timeout.set(() => console.log("done"), this.tick)
+        this.timeout.set(() => console.log("done"), this.props.tick)
     }
     pause () {
 
