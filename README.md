@@ -10,49 +10,57 @@ See [example](example/config.json).
 
 ## Events
 
-### started
+### Timer Events
+
+#### started
 
 Start has been called and timer has started
 
-### ticked
+#### ticked
 
 Tick callback called
 
-### custom
-
-Custom time event triggered (+/- time)
-
-### set.started
-
-Set has started
-
-### phase.started
-
-Phase has started
-
-### phase.skipped
-
-Phase has been skipped
-
-### phase.finished
-
-Phase has finished
-
-### set.finished
-
-Set has finished
-
-### paused
+#### paused
 
 Pause has been called and timer is paused
 
-### stopped
+#### stopped
 
 Stop has been called and timer is stopped
 
-### reset
+#### reset
 
 Reset has been called and timer is reset
+
+### Set Events
+
+#### set.started
+
+Set has started
+
+#### set.finished
+
+Set has finished
+
+### Phase Events
+
+#### phase.started
+
+Phase has started
+
+#### phase.skipped
+
+Phase has been skipped
+
+#### phase.finished
+
+Phase has finished
+
+### Custom Events
+
+#### custom-name
+
+Custom time event triggered (+/- time)
 
 ## License
 
