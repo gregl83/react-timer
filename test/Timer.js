@@ -15,4 +15,6 @@ describe('Timer', function() {
     })
 
     // todo add timer expectations / assertions
+
+    // events state change ?
 })

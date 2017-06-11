@@ -25,7 +25,8 @@
   },
   "homepage": "https://github.com/gregl83/react-timer#readme",
   "dependencies": {
-    "react-native-background-timer": "^1.0.2"
+    "react-native-background-timer": "^1.0.2",
+    "fbemitter": "^2.1.1"
   },
   "devDependencies": {
     "babel-core": "^6.25.0",

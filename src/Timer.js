@@ -1,8 +1,11 @@
+import { EventEmitter } from "fbemitter"
 import Config from "./Config"
 import Timeout from "./Timeout"
 
-export default class Timer {
+export default class Timer extends EventEmitter {
     constructor (config) {
+        super()
+
         this.config = new Config(config)
         this.timeout = new Timeout()
 
@@ -25,21 +28,25 @@ export default class Timer {
         }
     }
     set state (state) {
+        let value = null
+
         switch (state) {
             case Timer.states.STARTED:
-                this.props.state = Timer.states.READY | Timer.states.STARTED
+                value = Timer.states.READY | Timer.states.STARTED
                 break
             case Timer.states.PAUSED:
-                this.props.state = Timer.states.READY | Timer.states.STARTED | Timer.states.PAUSED
+                value = Timer.states.READY | Timer.states.STARTED | Timer.states.PAUSED
                 break
             case Timer.states.STOPPED:
-                this.props.state = Timer.states.READY | Timer.states.STARTED | Timer.states.PAUSED | Timer.states.STOPPED
+                value = Timer.states.READY | Timer.states.STARTED | Timer.states.PAUSED | Timer.states.STOPPED
                 break
             case Timer.states.READY:
             default:
-                this.props.state = Timer.states.READY
+                value = Timer.states.READY
                 break
         }
+
+        this.props.state = value
     }
     is (state) {
         return (this.props.state & state) === state
@@ -48,6 +55,9 @@ export default class Timer {
         this.timeout.set(() => console.log("done"), this.props.tick)
     }
     pause () {
+
+    }
+    skip () {
 
     }
     stop () {
