@@ -10,9 +10,9 @@
   ],
   "main": "src/Timer.js",
   "scripts": {
-    "test": "mocha --require test/support/env --reporter spec --bail --check-leaks test/",
-    "test-ci": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --require test/support/env --reporter spec --check-leaks test/",
-    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --require test/support/env --reporter dot --check-leaks test/"
+    "test": "mocha --require test/support/env --compilers js:babel-core/register --reporter spec --bail --check-leaks test/",
+    "test-ci": "istanbul cover node_modules/mocha/bin/_mocha --compilers js:babel-core/register --report lcovonly -- --require test/support/env --reporter spec --check-leaks test/",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --compilers js:babel-core/register --require test/support/env --reporter dot --check-leaks test/"
   },
   "repository": {
     "type": "git",
@@ -28,7 +28,7 @@
     "react-native-background-timer": "^1.0.2"
   },
   "devDependencies": {
-    "babel-cli": "^6.24.1",
+    "babel-core": "^6.25.0",
     "babel-preset-node6": "^11.0.0",
     "mocha": "^3.4.2",
     "should": "^11.2.1",
