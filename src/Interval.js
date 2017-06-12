@@ -5,14 +5,19 @@ export default class Interval extends EventEmitter {
         super()
         this.id = null
     }
-    timeout () {
+    timeout (offset) {
         let date = new Date()
-        let timeToSecond = 1000 - date.getTime() % 1000
+
+        // todo allow timeouts to run on an offset
+
+        if (!offset) offset = date.getTime() % 1000
+
+        let timeToSecond = offset - date.getTime() % 1000
         let timeIncomplete = (timeToSecond < 10)
 
         if (!timeIncomplete) this.emit('tick', date)
 
-        this.id = setTimeout(() => this.timeout, timeToSecond)
+        this.id = setTimeout(() => this.timeout(offset), timeToSecond)
     }
     start () {
         if (!this.id) this.timeout()

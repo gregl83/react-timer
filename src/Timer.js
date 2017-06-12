@@ -70,6 +70,13 @@ export default class Timer extends EventEmitter {
         }
     }
     skip () {
+        if (this.is(Timer.states.STARTED) && !this.is(Timer.states.STOPPED)) {
+            // todo skip phase
+
+            // todo build payload for skipped event
+
+            this.emit('skipped') // fixme add event data
+        }
 
     }
     stop () {
