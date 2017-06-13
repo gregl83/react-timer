@@ -29,5 +29,39 @@ describe('Interval', () => {
         })
     })
 
-    // todo add Interval expectations / assertions
+    describe('start', () => {
+        it('sets started timestamp and calls run', done => {
+            let interval = new Interval
+
+            sinon.stub(Interval, 'getTimestamp').returns(10250)
+            let run = sinon.stub(interval, 'run')
+
+            should(interval.started).be.equal(null)
+            should(interval.id).be.equal(null)
+
+            interval.start()
+
+            should(run.called).be.true()
+            should(interval.started).be.equal(10250)
+
+            Interval.getTimestamp.restore()
+
+            done()
+        })
+
+        it('cannot be started twice', done => {
+            let interval = new Interval
+
+            interval.id = 1234
+
+            let run = sinon.stub(interval, 'run')
+
+            interval.start()
+
+            should(run.called).be.false()
+            should(interval.started).be.equal(null)
+
+            done()
+        })
+    })
 })
