@@ -65,6 +65,26 @@ describe('Interval', () => {
         })
     })
 
+    describe('run', () => {
+        it('emits tick events and stops after timeout cleared', done => {
+            let interval = new Interval(15)
+
+            let tick = sinon.stub(interval, 'tick')
+
+            interval.addListener('tick', tick)
+
+            interval.run()
+
+            setTimeout(() => {
+                clearTimeout(interval.id)
+
+                should(tick.called).be.true()
+
+                done()
+            }, 30)
+        })
+    })
+
     describe('stop', () => {
         it('clears timeout and calls init', done => {
             let interval = new Interval
