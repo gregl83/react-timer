@@ -64,4 +64,32 @@ describe('Interval', () => {
             done()
         })
     })
+
+    describe('stop', () => {
+        it('clears timeout and calls init', done => {
+            let interval = new Interval
+
+            interval.id = 1234
+
+            let init = sinon.stub(interval, 'init')
+
+            interval.stop()
+
+            should(init.called).be.true()
+
+            done()
+        })
+
+        it('cannot run if already stopped', done => {
+            let interval = new Interval
+
+            let init = sinon.stub(interval, 'init')
+
+            interval.stop()
+
+            should(init.called).be.false()
+
+            done()
+        })
+    })
 })
