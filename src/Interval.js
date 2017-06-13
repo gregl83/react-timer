@@ -1,28 +1,45 @@
 import { EventEmitter } from "fbemitter"
 
 export default class Interval extends EventEmitter {
-    constructor () {
+    constructor (duration) {
         super()
-        this.id = null
+        this.duration = duration || 1000
+        this.init()
     }
-    timeout (offset) {
-        let date = new Date()
+    init() {
+        this.id = null
+        this.started = null
+        this.expectedElapsed = null
+    }
+    static getTimestamp () {
+        return Date.now()
+    }
+    getNextTick () {
+        let timestamp = Interval.getTimestamp()
 
-        // todo allow timeouts to run on an offset
+        if (!this.expectedElapsed) this.expectedElapsed = timestamp
+        else this.expectedElapsed += this.duration
 
-        if (!offset) offset = date.getTime() % 1000
-
-        let timeToSecond = offset - date.getTime() % 1000
-        let timeIncomplete = (timeToSecond < 10)
-
-        if (!timeIncomplete) this.emit('tick', date)
-
-        this.id = setTimeout(() => this.timeout(offset), timeToSecond)
+        let nextTick = this.duration - (timestamp - this.expectedElapsed)
+        return nextTick < 0 ? 0 : nextTick
+    }
+    run () {
+        let nextTick = this.getNextTick()
+        this.id = setTimeout(() => {
+            this.emit('tick')
+            this.run()
+        }, nextTick)
     }
     start () {
-        if (!this.id) this.timeout()
+        if (!this.id) {
+            this.started = Interval.getTimestamp()
+            this.run()
+        }
     }
     stop () {
-        if (this.id) clearTimeout(this.id)
+        if (this.id) {
+            clearTimeout(this.id)
+            this.init()
+        }
     }
 }
