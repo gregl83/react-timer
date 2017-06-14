@@ -40,7 +40,7 @@ export default class Interval extends EventEmitter {
         if (this.id) {
             clearTimeout(this.id)
             this.id = null
-            this.remainder = this.getNextTick() - this.duration
+            this.remainder = this.duration - this.getNextTick()
         }
     }
     stop () {

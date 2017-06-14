@@ -66,7 +66,32 @@ describe('Interval', () => {
     })
 
     describe('pause', () => {
-        // todo test pause with remainder and start
+        it('clears timeout and sets remainder', done => {
+            let interval = new Interval
+
+            sinon.stub(Interval, 'getTimestamp').returns(10000)
+            sinon.stub(interval, 'getNextTick').returns(980)
+            let run = sinon.stub(interval, 'run')
+
+            interval.start()
+
+            interval.id = 1234
+
+            interval.pause()
+
+            should(interval.id).be.equal(null)
+            should(interval.remainder).be.equal(20)
+
+            Interval.getTimestamp.returns(15000)
+
+            interval.start()
+
+            should(run.calledWith(null, 20))
+
+            Interval.getTimestamp.restore()
+
+            done()
+        })
     })
 
     describe('run', () => {
