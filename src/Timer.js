@@ -7,12 +7,14 @@ export default class Timer extends EventEmitter {
         super()
 
         this.config = new Config(config)
+
         this.interval = new Interval
+        this.interval.addListener('tick', () => this.tick())
 
         this.props = {
-            time: null, // todo consider config
+            duration: null, // figure out
+            started: null,
             elapsed: 0,
-            startDate: null,
             state: null
         }
 
@@ -51,13 +53,19 @@ export default class Timer extends EventEmitter {
         return (this.props.state & state) === state
     }
     tick () {
-        // todo tick
+        this.props.elapsed++
+        // todo - managed set and phase changes
+
+        // todo - countdown phase
+
+        // todo - dispatch custom events
+
         this.emit('ticked')
     }
     start () {
         if (this.is(Timer.states.READY) && !this.is(Timer.states.STARTED)) {
-            //this.timeout.set(() => console.log("done"), this.props.tick)
-            // fixme start timer
+            this.props.started = Date.now()
+            this.interval.start()
             this.state = Timer.states.STARTED
             this.emit('started')
         }
@@ -77,11 +85,11 @@ export default class Timer extends EventEmitter {
 
             this.emit('skipped') // fixme add event data
         }
-
     }
     stop () {
         if (this.is(Timer.states.STARTED) && !this.is(Timer.states.STOPPED)) {
             // fixme stop timer
+            this.interval.stop()
             this.state = Timer.states.STOPPED
             this.emit('stopped')
         }
@@ -89,6 +97,7 @@ export default class Timer extends EventEmitter {
     reset () {
         if (this.is(Timer.states.STARTED)) {
             this.stop()
+            this.props.started = null
             // fixme reset timer
             this.state = Timer.states.READY
             this.emit('reset')

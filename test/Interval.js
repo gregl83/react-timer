@@ -65,6 +65,10 @@ describe('Interval', () => {
         })
     })
 
+    describe('pause', () => {
+        // todo test pause with remainder and start
+    })
+
     describe('run', () => {
         it('emits tick events and stops after timeout cleared', done => {
             let interval = new Interval(15)

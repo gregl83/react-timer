@@ -10,6 +10,7 @@ export default class Interval extends EventEmitter {
         this.id = null
         this.started = null
         this.expectedElapsed = null
+        this.remainder = null
     }
     static getTimestamp () {
         return Date.now()
@@ -23,17 +24,23 @@ export default class Interval extends EventEmitter {
         let nextTick = this.duration - (timestamp - this.expectedElapsed)
         return nextTick < 0 ? 0 : nextTick
     }
-    run () {
-        let nextTick = this.getNextTick()
+    run (nextTick) {
         this.id = setTimeout(() => {
             this.emit('tick')
             this.run()
-        }, nextTick)
+        }, nextTick || this.getNextTick())
     }
     start () {
         if (!this.id) {
             this.started = Interval.getTimestamp()
-            this.run()
+            this.run(this.remainder)
+        }
+    }
+    pause () {
+        if (this.id) {
+            clearTimeout(this.id)
+            this.id = null
+            this.remainder = this.getNextTick() - this.duration
         }
     }
     stop () {
