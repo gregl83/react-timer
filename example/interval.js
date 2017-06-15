@@ -13,4 +13,18 @@ interval.addListener('tick', () => {
     log(`tick ${++elapsed} seconds elapsed`)
 })
 
+log(`starting`)
+
 interval.start()
+
+setTimeout(() => {
+    log(`pausing`)
+
+    interval.pause()
+
+    setTimeout(() => {
+        log(`stopping`)
+
+        interval.stop()
+    }, 2015)
+}, 10015)
