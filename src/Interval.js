@@ -8,7 +8,6 @@ export default class Interval extends EventEmitter {
     }
     init() {
         this.id = null
-        this.started = null
         this.expectedElapsed = null
         this.remainder = null
     }
@@ -32,16 +31,15 @@ export default class Interval extends EventEmitter {
     }
     start () {
         if (!this.id) {
-            this.started = Interval.getTimestamp()
             this.run(this.remainder)
         }
     }
     pause () {
         if (this.id) {
             clearTimeout(this.id)
-            this.id = null
-            this.remainder = this.duration - this.getNextTick()
-            this.expectedElapsed = null
+            let remainder = this.duration - this.getNextTick()
+            this.init()
+            this.remainder = remainder
         }
     }
     stop () {
