@@ -63,7 +63,7 @@ export default class Timer extends EventEmitter {
         this.emit('ticked')
     }
     start () {
-        if (this.is(Timer.states.READY) && !this.is(Timer.states.STARTED)) {
+        if (this.is(Timer.states.READY) && !this.is(Timer.states.STOPPED)) {
             this.props.started = Date.now()
             this.interval.start()
             this.state = Timer.states.STARTED
@@ -73,6 +73,7 @@ export default class Timer extends EventEmitter {
     pause () {
         if (this.is(Timer.states.STARTED) && !this.is(Timer.states.PAUSED)) {
             // fixme pause timer
+            this.interval.pause()
             this.state = Timer.states.PAUSED
             this.emit('paused')
         }
@@ -98,6 +99,7 @@ export default class Timer extends EventEmitter {
         if (this.is(Timer.states.STARTED)) {
             this.stop()
             this.props.started = null
+            this.props.elapsed = 0
             // fixme reset timer
             this.state = Timer.states.READY
             this.emit('reset')

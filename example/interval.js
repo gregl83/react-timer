@@ -10,7 +10,7 @@ let interval = new Interval
 
 let elapsed = 0
 interval.addListener('tick', () => {
-    log(`tick ${++elapsed} seconds elapsed`)
+    log(`tick ${++elapsed} second(s) elapsed`)
 })
 
 log(`starting`)
@@ -26,5 +26,5 @@ setTimeout(() => {
         log(`stopping`)
 
         interval.stop()
-    }, 2015)
+    }, 1015)
 }, 10015)
