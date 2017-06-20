@@ -1,7 +1,13 @@
 import Timer from "../"
-import config from "../example/config.json"
 import sinon from "sinon"
 import should from "should"
+
+let config = {
+    name: 'test',
+    fixed: false,
+    sets: [],
+    events: []
+}
 
 describe('Timer', () => {
     it('state is ready with new instance', done => {
@@ -13,7 +19,7 @@ describe('Timer', () => {
             should(timer.is(Timer.states.PAUSED)).be.false()
             should(timer.is(Timer.states.STOPPED)).be.false()
             done()
-        }, 1050)
+        }, 20)
     })
 
     describe('events', () => {
@@ -29,7 +35,7 @@ describe('Timer', () => {
             setTimeout(() => {
                 should(start.called).be.true()
                 done()
-            }, 250)
+            }, 20)
         })
 
         it('ticked event emitted', done => {
@@ -42,9 +48,9 @@ describe('Timer', () => {
             timer.start()
 
             setTimeout(() => {
-                //should(ticked.called).be.true()
+                should(ticked.called).be.true()
                 done()
-            }, 250)
+            }, 1020)
         })
 
         it('paused event emitted', done => {
@@ -60,7 +66,7 @@ describe('Timer', () => {
             setTimeout(() => {
                 should(pause.called).be.true()
                 done()
-            }, 250)
+            }, 20)
         })
 
         it('stopped event emitted', done => {
@@ -76,7 +82,7 @@ describe('Timer', () => {
             setTimeout(() => {
                 should(stop.called).be.true()
                 done()
-            }, 250)
+            }, 20)
         })
 
         it('reset event emitted', done => {
@@ -92,7 +98,7 @@ describe('Timer', () => {
             setTimeout(() => {
                 should(reset.called).be.true()
                 done()
-            }, 250)
+            }, 20)
         })
     })
 
