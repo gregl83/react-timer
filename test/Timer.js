@@ -1,10 +1,11 @@
 import Timer from "../"
+import config from "../example/config.json"
 import sinon from "sinon"
 import should from "should"
 
 describe('Timer', () => {
     it('state is ready with new instance', done => {
-        let timer = new Timer
+        let timer = new Timer(config)
 
         setTimeout(() => {
             should(timer.is(Timer.states.READY)).be.true()
@@ -17,7 +18,7 @@ describe('Timer', () => {
 
     describe('events', () => {
         it('started event emitted', done => {
-            let timer = new Timer
+            let timer = new Timer(config)
 
             let start = sinon.spy()
 
@@ -32,7 +33,7 @@ describe('Timer', () => {
         })
 
         it('ticked event emitted', done => {
-            let timer = new Timer
+            let timer = new Timer(config)
 
             let ticked = sinon.spy()
 
@@ -47,7 +48,7 @@ describe('Timer', () => {
         })
 
         it('paused event emitted', done => {
-            let timer = new Timer
+            let timer = new Timer(config)
 
             let pause = sinon.spy()
 
@@ -63,7 +64,7 @@ describe('Timer', () => {
         })
 
         it('stopped event emitted', done => {
-            let timer = new Timer
+            let timer = new Timer(config)
 
             let stop = sinon.spy()
 
@@ -79,7 +80,7 @@ describe('Timer', () => {
         })
 
         it('reset event emitted', done => {
-            let timer = new Timer
+            let timer = new Timer(config)
 
             let reset = sinon.spy()
 

@@ -6,7 +6,7 @@
       "phases": [
         {
           "name": "alpha",
-          "time": 60,
+          "duration": 60,
           "skip": false,
           "events": [
             {
@@ -17,7 +17,7 @@
         },
         {
           "name": "bravo",
-          "time": 120,
+          "duration": 120,
           "skip": true,
           "events": [
             {
