@@ -3,53 +3,152 @@ import sinon from "sinon"
 import should from "should"
 
 describe('Config', () => {
-    it('initializes intervals', done => {
-        let config = new Config({
-            name: 'test',
-            fixed: false,
-            sets: [
-                {
-                    phases: [
-                        {
-                            name: "one",
-                            duration: 60,
-                            skip: false,
-                            events: []
-                        }
-                    ],
-                    events: []
-                },
-                {
-                    phases: [
-                        {
-                            name: "two",
-                            duration: 120,
-                            skip: true,
-                            events: []
-                        }
-                    ],
-                    events: []
-                }
-            ],
-            events: []
+    describe('initializes', () => {
+        it('base properties', done => {
+            let config = new Config({
+                name: 'test',
+                fixed: true,
+                sets: [],
+                events: []
+            })
+
+            should(config.name).be.equal('test')
+            should(config.fixed).be.true()
+
+            done()
         })
 
-        should(config.intervals).be.length(2)
-        should(config.duration).be.equal(180)
+        it('intervals', done => {
+            let config = new Config({
+                name: 'test',
+                fixed: false,
+                sets: [
+                    {
+                        phases: [
+                            {
+                                name: 'one',
+                                duration: 60,
+                                skip: false,
+                                events: []
+                            }
+                        ],
+                        events: []
+                    },
+                    {
+                        phases: [
+                            {
+                                name: 'two',
+                                duration: 120,
+                                skip: true,
+                                events: []
+                            }
+                        ],
+                        events: []
+                    }
+                ],
+                events: []
+            })
 
-        should(config.intervals[0].constructor.name).be.equal('Interval')
-        should(config.intervals[0].set).be.equal(0)
-        should(config.intervals[0].phase).be.equal('one')
-        should(config.intervals[0].skip).be.false()
-        should(config.intervals[0].duration).be.equal(60)
+            should(config.intervals).be.length(2)
+            should(config.duration).be.equal(180)
 
-        should(config.intervals[1].constructor.name).be.equal('Interval')
-        should(config.intervals[1].set).be.equal(1)
-        should(config.intervals[1].phase).be.equal('two')
-        should(config.intervals[1].skip).be.true()
-        should(config.intervals[1].duration).be.equal(120)
+            should(config.intervals[0].constructor.name).be.equal('Interval')
+            should(config.intervals[0].set).be.equal(0)
+            should(config.intervals[0].phase).be.equal('one')
+            should(config.intervals[0].skip).be.false()
+            should(config.intervals[0].duration).be.equal(60)
 
-        done()
+            should(config.intervals[1].constructor.name).be.equal('Interval')
+            should(config.intervals[1].set).be.equal(1)
+            should(config.intervals[1].phase).be.equal('two')
+            should(config.intervals[1].skip).be.true()
+            should(config.intervals[1].duration).be.equal(120)
+
+            done()
+        })
+
+        it('events', done => {
+            let config = new Config({
+                name: 'test',
+                fixed: false,
+                sets: [
+                    {
+                        phases: [
+                            {
+                                name: 'one',
+                                duration: 60,
+                                skip: false,
+                                events: [
+                                    {
+                                        name: 'alpha',
+                                        time: -10
+                                    },
+                                    {
+                                        name: 'bravo',
+                                        time: 10
+                                    }
+                                ]
+                            }
+                        ],
+                        events: [
+                            {
+                                name: 'charlie',
+                                time: -10
+                            },
+                            {
+                                name: 'delta',
+                                time: 10
+                            }
+                        ]
+                    },
+                    {
+                        phases: [
+                            {
+                                name: 'two',
+                                duration: 120,
+                                skip: true,
+                                events: [
+                                    {
+                                        name: 'echo',
+                                        time: 10
+                                    },
+                                    {
+                                        name: 'foxtrot',
+                                        time: -10
+                                    }
+                                ]
+                            }
+                        ],
+                        events: [
+                            {
+                                name: 'gulf',
+                                time: 10
+                            },
+                            {
+                                name: 'hotel',
+                                time: -10
+                            }
+                        ]
+                    }
+                ],
+                events: [
+                    {
+                        name: 'india',
+                        time: 10
+                    },
+                    {
+                        name: 'juliet',
+                        time: -10
+                    }
+                ]
+            })
+
+            should(config.events[10].constructor.name).be.equal('Array')
+
+            should(config.events[170].constructor.name).be.equal('Array')
+
+            done()
+        })
     })
 
     // todo - add config tests

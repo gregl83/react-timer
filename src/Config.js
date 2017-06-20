@@ -9,8 +9,8 @@ class Interval {
 
 export default class Config {
     constructor (config) {
-        this.name = config.name || null
-        this.fixed = config.fixed || null
+        this.name = config.name
+        this.fixed = config.fixed
         this.duration = 0
         this.intervals = []
         this.events = []
@@ -37,9 +37,12 @@ export default class Config {
         }
     }
     addEvent (meta, event) {
-        let elapsed = event.time > 0 ? event.time : this.duration + event.time
+        // todo - consider alternative method for calculating event time
 
-        if (elapsed > event.time || elapsed <= 0) throw new Error('event time must be within interval duration')
+        if (!event.time) throw new Error('event time must be non-zero value')
+        if (Math.abs(event.time) >= event.duration) throw new Error('event time must within interval duration')
+
+        let elapsed = event.time > 0 ? event.time : this.duration + event.time
 
         if (typeof this.events[elapsed] === 'undefined') this.events[elapsed] = []
 
