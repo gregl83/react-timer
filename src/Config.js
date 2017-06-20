@@ -19,7 +19,7 @@ export default class Config {
     init (config) {
         for (const [index, set] of config.sets.entries()) {
             for (const phase of set.phases) {
-                let interval = new Interval(set.name, phase.name, phase.skip, phase.duration)
+                let interval = new Interval(index, phase.name, phase.skip, phase.duration)
 
                 this.addInterval(interval)
 
@@ -38,6 +38,8 @@ export default class Config {
     }
     addEvent (meta, event) {
         let elapsed = event.time > 0 ? event.time : this.duration + event.time
+
+        if (elapsed > event.time || elapsed <= 0) throw new Error('event time must be within interval duration')
 
         if (typeof this.events[elapsed] === 'undefined') this.events[elapsed] = []
 
