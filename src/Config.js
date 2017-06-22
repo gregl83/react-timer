@@ -18,31 +18,33 @@ export default class Config {
     }
     init (config) {
         for (const [index, set] of config.sets.entries()) {
+            let setStart = this.duration
+
             for (const phase of set.phases) {
+                let phaseStart = this.duration
+
                 let interval = new Interval(index, phase.name, phase.skip, phase.duration)
 
                 this.addInterval(interval)
 
-                this.addEvents({set: index, phase: phase.name}, phase.events)
+                this.addEvents(phaseStart, this.duration, {set: index, phase: phase.name}, phase.events)
             }
 
-            this.addEvents({set: index}, set.events)
+            this.addEvents(setStart, this.duration, {set: index}, set.events)
         }
 
-        this.addEvents({}, config.events)
+        this.addEvents(0, this.duration, {}, config.events)
     }
-    addEvents (meta, events) {
+    addEvents (start, end, meta, events) {
         for (const event of events) {
-            this.addEvent(meta, event)
+            this.addEvent(start, end, meta, event)
         }
     }
-    addEvent (meta, event) {
-        // todo - consider alternative method for calculating event time
-
+    addEvent (start, end, meta, event) {
         if (!event.time) throw new Error('event time must be non-zero value')
-        if (Math.abs(event.time) >= event.duration) throw new Error('event time must within interval duration')
+        if (Math.abs(event.time) >= end - start) throw new Error('event time must within interval duration')
 
-        let elapsed = event.time > 0 ? event.time : this.duration + event.time
+        let elapsed = event.time > 0 ? start + event.time : end + event.time
 
         if (typeof this.events[elapsed] === 'undefined') this.events[elapsed] = []
 

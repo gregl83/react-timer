@@ -88,15 +88,30 @@ describe('Config', () => {
                                         time: 10
                                     }
                                 ]
+                            },
+                            {
+                                name: 'two',
+                                duration: 30,
+                                skip: false,
+                                events: [
+                                    {
+                                        name: 'charlie',
+                                        time: -10
+                                    },
+                                    {
+                                        name: 'delta',
+                                        time: 10
+                                    }
+                                ]
                             }
                         ],
                         events: [
                             {
-                                name: 'charlie',
+                                name: 'echo',
                                 time: -10
                             },
                             {
-                                name: 'delta',
+                                name: 'foxtrot',
                                 time: 10
                             }
                         ]
@@ -104,16 +119,31 @@ describe('Config', () => {
                     {
                         phases: [
                             {
-                                name: 'two',
+                                name: 'three',
                                 duration: 120,
                                 skip: true,
                                 events: [
                                     {
-                                        name: 'echo',
+                                        name: 'gulf',
                                         time: 10
                                     },
                                     {
-                                        name: 'foxtrot',
+                                        name: 'hotel',
+                                        time: -10
+                                    }
+                                ]
+                            },
+                            {
+                                name: 'four',
+                                duration: 60,
+                                skip: true,
+                                events: [
+                                    {
+                                        name: 'india',
+                                        time: 10
+                                    },
+                                    {
+                                        name: 'juliet',
                                         time: -10
                                     }
                                 ]
@@ -121,11 +151,11 @@ describe('Config', () => {
                         ],
                         events: [
                             {
-                                name: 'gulf',
+                                name: 'kilo',
                                 time: 10
                             },
                             {
-                                name: 'hotel',
+                                name: 'lima',
                                 time: -10
                             }
                         ]
@@ -133,11 +163,11 @@ describe('Config', () => {
                 ],
                 events: [
                     {
-                        name: 'india',
+                        name: 'mike',
                         time: 10
                     },
                     {
-                        name: 'juliet',
+                        name: 'november',
                         time: -10
                     }
                 ]
@@ -145,7 +175,7 @@ describe('Config', () => {
 
             should(config.events[10].constructor.name).be.equal('Array')
 
-            should(config.events[170].constructor.name).be.equal('Array')
+            //should(config.events[170].constructor.name).be.equal('Array')
 
             done()
         })
