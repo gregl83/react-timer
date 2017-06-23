@@ -174,8 +174,34 @@ describe('Config', () => {
             })
 
             should(config.events[10].constructor.name).be.equal('Array')
+            should(config.events[10]).be.length(3)
 
-            //should(config.events[170].constructor.name).be.equal('Array')
+            should(config.events[50].constructor.name).be.equal('Array')
+            should(config.events[50]).be.length(1)
+
+            should(config.events[70].constructor.name).be.equal('Array')
+            should(config.events[70]).be.length(1)
+
+            should(config.events[70].constructor.name).be.equal('Array')
+            should(config.events[70]).be.length(1)
+
+            should(config.events[80].constructor.name).be.equal('Array')
+            should(config.events[80]).be.length(2)
+
+            should(config.events[80].constructor.name).be.equal('Array')
+            should(config.events[80]).be.length(2)
+
+            should(config.events[100].constructor.name).be.equal('Array')
+            should(config.events[100]).be.length(2)
+
+            should(config.events[200].constructor.name).be.equal('Array')
+            should(config.events[200]).be.length(1)
+
+            should(config.events[220].constructor.name).be.equal('Array')
+            should(config.events[220]).be.length(1)
+
+            should(config.events[260].constructor.name).be.equal('Array')
+            should(config.events[260]).be.length(3)
 
             done()
         })

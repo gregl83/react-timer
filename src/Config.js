@@ -13,7 +13,7 @@ export default class Config {
         this.fixed = config.fixed
         this.duration = 0
         this.intervals = []
-        this.events = []
+        this.events = {}
         this.init(config)
     }
     init (config) {
@@ -46,7 +46,7 @@ export default class Config {
 
         let elapsed = event.time > 0 ? start + event.time : end + event.time
 
-        if (typeof this.events[elapsed] === 'undefined') this.events[elapsed] = []
+        if (!Array.isArray(this.events[elapsed])) this.events[elapsed] = []
 
         this.events[elapsed].push({meta: meta, event: event})
     }
