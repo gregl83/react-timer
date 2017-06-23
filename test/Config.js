@@ -67,6 +67,52 @@ describe('Config', () => {
             done()
         })
 
+        describe('events', () => {
+            it('sets from start or end of phase', done => {
+                let config = new Config({
+                    name: 'start-end',
+                    fixed: false,
+                    sets: [
+                        {
+                            phases: [
+                                {
+                                    name: 'one',
+                                    duration: 60,
+                                    skip: false,
+                                    events: [
+                                        {name: 'alpha', time: -10},
+                                        {name: 'bravo', time: 10}
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                })
+
+                let events = config.events
+
+                should(events[10]).not.be.undefined()
+                should(events[10].constructor.name).be.equal('Array')
+                should(events[10]).be.length(1)
+
+                should(events[10][0].meta.set).be.equal(0)
+                should(events[10][0].meta.phase).be.equal('one')
+                should(events[10][0].event.name).be.equal('bravo')
+                should(events[10][0].event.time).be.equal(10)
+
+                should(events[50]).not.be.undefined()
+                should(events[50].constructor.name).be.equal('Array')
+                should(events[50]).be.length(1)
+
+                should(events[50][0].meta.set).be.equal(0)
+                should(events[50][0].meta.phase).be.equal('one')
+                should(events[50][0].event.name).be.equal('alpha')
+                should(events[50][0].event.time).be.equal(-10)
+
+                done()
+            })
+        })
+
         it('events', done => {
             let config = new Config({
                 name: 'test',

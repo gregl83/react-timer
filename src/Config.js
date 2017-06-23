@@ -16,6 +16,12 @@ export default class Config {
         this.events = {}
         this.init(config)
     }
+    static getMeta (set, phase) {
+        if (typeof set === 'undefined') set = null
+        if (typeof phase === 'undefined') phase = null
+
+        return {set, phase}
+    }
     init (config) {
         for (const [index, set] of config.sets.entries()) {
             let setStart = this.duration
@@ -27,13 +33,15 @@ export default class Config {
 
                 this.addInterval(interval)
 
-                this.addEvents(phaseStart, this.duration, {set: index, phase: phase.name}, phase.events)
+                if (Array.isArray(phase.events)) {
+                    this.addEvents(phaseStart, this.duration, Config.getMeta(index, phase.name), phase.events)
+                }
             }
 
-            this.addEvents(setStart, this.duration, {set: index}, set.events)
+            if (Array.isArray(set.events)) this.addEvents(setStart, this.duration, Config.getMeta(index), set.events)
         }
 
-        this.addEvents(0, this.duration, {}, config.events)
+        if (Array.isArray(config.events)) this.addEvents(0, this.duration, Config.getMeta(), config.events)
     }
     addEvents (start, end, meta, events) {
         for (const event of events) {
