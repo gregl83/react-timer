@@ -33,15 +33,31 @@ export default class Config {
 
                 this.addInterval(interval)
 
-                if (Array.isArray(phase.events)) {
-                    this.addEvents(phaseStart, this.duration, Config.getMeta(index, phase.name), phase.events)
-                }
+                let meta = Config.getMeta(index, phase.name)
+                this.initEvents(phaseStart, this.duration, meta, phase.events, 'phase')
             }
 
-            if (Array.isArray(set.events)) this.addEvents(setStart, this.duration, Config.getMeta(index), set.events)
+            let meta = Config.getMeta(index)
+            this.initEvents(setStart, this.duration, meta, set.events, 'set')
         }
 
-        if (Array.isArray(config.events)) this.addEvents(0, this.duration, Config.getMeta(), config.events)
+        let meta = Config.getMeta()
+        this.initEvents(0, this.duration, meta, config.events)
+    }
+    initEvents (start, end, meta, events, type) {
+        if (Array.isArray(events)) {
+            let allEvents = events
+
+            if (typeof type !== 'undefined') {
+                let typeEvents = [
+                    {name: `${type}.started`, time: start},
+                    {name: `${type}.finished`, time: end - start}
+                ]
+                allEvents = typeEvents.concat(events)
+            }
+
+            this.addEvents(start, end, meta, allEvents)
+        }
     }
     addEvents (start, end, meta, events) {
         for (const event of events) {
@@ -49,10 +65,10 @@ export default class Config {
         }
     }
     addEvent (start, end, meta, event) {
-        if (!event.time) throw new Error('event time must be non-zero value')
-        if (Math.abs(event.time) >= end - start) throw new Error('event time must within interval duration')
+        if (!Number.isInteger(event.time)) throw new Error('event time must be an integer')
+        if (Math.abs(event.time) > end - start) throw new Error('event time must within interval duration')
 
-        let elapsed = event.time > 0 ? start + event.time : end + event.time
+        let elapsed = event.time >= 0 ? start + event.time : end + event.time
 
         if (!Array.isArray(this.events[elapsed])) this.events[elapsed] = []
 
