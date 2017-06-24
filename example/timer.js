@@ -26,4 +26,9 @@ timer.addListener('stopped', () => {
 
 timer.addListener('reset', () => console.log('reset', timer.props))
 
+timer.addListener('alpha-reminder', () => console.log('alpha-reminder', timer.props))
+timer.addListener('bravo-reminder', () => console.log('bravo-reminder', timer.props))
+timer.addListener('set-reminder', () => console.log('set-reminder', timer.props))
+timer.addListener('session-reminder', () => console.log('session-reminder', timer.props))
+
 timer.start()

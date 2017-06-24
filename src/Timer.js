@@ -12,7 +12,7 @@ export default class Timer extends EventEmitter {
         this.interval.addListener('tick', () => this.tick())
 
         this.props = {
-            duration: null, // figure out
+            startInterval: 0,
             started: null,
             elapsed: 0,
             state: null
@@ -52,15 +52,25 @@ export default class Timer extends EventEmitter {
     is (state) {
         return (this.props.state & state) === state
     }
+    emitEvents (events) {
+        for (const event of events) {
+            this.emit(event.data.name)
+        }
+    }
     tick () {
         this.props.elapsed++
+
+
+
         // todo - managed set and phase changes
 
         // todo - countdown phase
 
-        // todo - dispatch custom events
-
         this.emit('ticked')
+
+        if (Array.isArray(this.config.events[this.props.elapsed])) {
+            this.emitEvents(this.config.events[this.props.elapsed])
+        }
     }
     start () {
         if (this.is(Timer.states.READY) && !this.is(Timer.states.STOPPED)) {

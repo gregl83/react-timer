@@ -56,7 +56,7 @@ export default class Config {
 
         if (!Array.isArray(this.events[elapsed])) this.events[elapsed] = []
 
-        this.events[elapsed].push({meta: meta, event: event})
+        this.events[elapsed].push({meta: meta, data: event})
     }
     addInterval (interval) {
         this.intervals.push(interval)
