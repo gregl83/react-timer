@@ -12,10 +12,10 @@ export default class Timer extends EventEmitter {
         this.interval.addListener('tick', () => this.tick())
 
         this.props = {
-            intervalIndex: 0,
             started: null,
             elapsed: 0,
             skipped: 0,
+            phaseEndTime: 0,
             state: null
         }
 
@@ -56,7 +56,16 @@ export default class Timer extends EventEmitter {
     emitEvents () {
         let events = this.config.getEvents(this.props.elapsed, this.props.skipped)
         for (const event of events) {
-            this.emit(event.data.attributes.name, event)
+            let eventName = event.data.attributes.name
+
+            if (eventName === 'phase.started') {
+                let phase = this.config.getPhase(event.meta.set, event.meta.phase)
+                this.props.phaseEndTime = this.props.elapsed + phase.duration
+            }
+
+            if (eventName === 'session.finished') setTimeout(() => this.stop(), 0)
+
+            this.emit(eventName, event)
         }
     }
     tick () {
@@ -82,6 +91,7 @@ export default class Timer extends EventEmitter {
     }
     skip () {
         if (this.is(Timer.states.STARTED) && !this.is(Timer.states.STOPPED)) {
+
             // todo skip phase
 
             // todo build payload for skipped event

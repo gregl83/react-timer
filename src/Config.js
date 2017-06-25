@@ -17,32 +17,28 @@ class Event {
     }
 }
 
-class Interval {
-    constructor (set, phase, skip, duration) {
-        this.set = set
-        this.phase = phase
-        this.skip = skip
-        this.duration = duration
-    }
-}
-
 export default class Config {
     constructor (config) {
         this.name = config.name
         this.fixed = config.fixed
         this.duration = 0
-        this.intervals = []
-        this.events = {}
-        this.init(config)
-    }
-    init (config) {
+        this.phases = Config.createPhaseIndex(config)
         this.events = Config.createEventIndex(config)
+    }
+    static createPhaseIndex (config) {
+        let index = {}
 
         for (const [setIndex, set] of config.sets.entries()) {
-            for (const phase of set.phases) {
-                this.addInterval(new Interval(setIndex, phase.name, phase.skip, phase.duration))
+            for (const [phaseIndex, phase] of set.phases.entries()) {
+                Config.addPhaseToIndex(setIndex, phaseIndex, phase, index)
             }
         }
+
+        return index
+    }
+    static addPhaseToIndex (setIndex, phaseIndex, phase, index) {
+        let key = `${setIndex}.${phaseIndex}`
+        index[key] = phase
     }
     static createEventIndex (config) {
         let index = {}
@@ -54,7 +50,7 @@ export default class Config {
 
             for (const [phaseIndex, phase] of set.phases.entries()) {
                 let eventsMeta = new EventMeta(setIndex, phaseIndex)
-                let eventsGroup = Config.createEventsGroup('set', phase.duration, phase.events)
+                let eventsGroup = Config.createEventsGroup('phase', phase.duration, phase.events)
                 Config.addEventsToIndex(elapsed, phase.duration, eventsGroup, eventsMeta, index)
 
                 elapsed += phase.duration
@@ -96,8 +92,8 @@ export default class Config {
         let key = elapsed + skipped
         return Array.isArray(this.events[key]) ? this.events[key] : []
     }
-    addInterval (interval) {
-        this.intervals.push(interval)
-        this.duration += interval.duration
+    getPhase (setIndex, phaseIndex) {
+        let key = `${setIndex}.${phaseIndex}`
+        return this.phases[key]
     }
 }
