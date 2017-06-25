@@ -12,9 +12,10 @@ export default class Timer extends EventEmitter {
         this.interval.addListener('tick', () => this.tick())
 
         this.props = {
-            startInterval: 0,
+            intervalIndex: 0,
             started: null,
             elapsed: 0,
+            skipped: 0,
             state: null
         }
 
@@ -52,17 +53,16 @@ export default class Timer extends EventEmitter {
     is (state) {
         return (this.props.state & state) === state
     }
-    emitEvents (elapsed) {
-        if (Array.isArray(this.config.events[elapsed])) {
-            for (const event of this.config.events[elapsed]) {
-                this.emit(event.data.name)
-            }
+    emitEvents () {
+        let events = this.config.getEvents(this.props.elapsed, this.props.skipped)
+        for (const event of events) {
+            this.emit(event.data.attributes.name, event)
         }
     }
     tick () {
         this.props.elapsed++
         this.emit('ticked')
-        this.emitEvents(this.props.elapsed)
+        this.emitEvents()
     }
     start () {
         if (this.is(Timer.states.READY) && !this.is(Timer.states.STOPPED)) {
@@ -70,7 +70,7 @@ export default class Timer extends EventEmitter {
             this.interval.start()
             this.state = Timer.states.STARTED
             this.emit('started')
-            this.emitEvents(this.props.elapsed)
+            this.emitEvents()
         }
     }
     pause () {

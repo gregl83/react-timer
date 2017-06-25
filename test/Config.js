@@ -87,19 +87,17 @@ describe('Config', () => {
                 should(events[10].constructor.name).be.equal('Array')
                 should(events[10]).be.length(1)
 
-                should(events[10][0].meta.set).be.null()
-                should(events[10][0].meta.phase).be.null()
-                should(events[10][0].data.name).be.equal('bravo')
-                should(events[10][0].data.time).be.equal(10)
+                should(events[10][0].meta).be.undefined()
+                should(events[10][0].data.attributes.name).be.equal('bravo')
+                should(events[10][0].data.attributes.time).be.equal(10)
 
                 should(events[50]).not.be.undefined()
                 should(events[50].constructor.name).be.equal('Array')
                 should(events[50]).be.length(1)
 
-                should(events[50][0].meta.set).be.null()
-                should(events[50][0].meta.phase).be.null()
-                should(events[50][0].data.name).be.equal('alpha')
-                should(events[50][0].data.time).be.equal(-10)
+                should(events[50][0].meta).be.undefined()
+                should(events[50][0].data.attributes.name).be.equal('alpha')
+                should(events[50][0].data.attributes.time).be.equal(-10)
 
                 done()
             })
@@ -126,18 +124,18 @@ describe('Config', () => {
                 should(events[10]).be.length(1)
 
                 should(events[10][0].meta.set).be.equal(0)
-                should(events[10][0].meta.phase).be.null()
-                should(events[10][0].data.name).be.equal('bravo')
-                should(events[10][0].data.time).be.equal(10)
+                should(events[10][0].meta.phase).be.undefined()
+                should(events[10][0].data.attributes.name).be.equal('bravo')
+                should(events[10][0].data.attributes.time).be.equal(10)
 
                 should(events[50]).not.be.undefined()
                 should(events[50].constructor.name).be.equal('Array')
                 should(events[50]).be.length(1)
 
                 should(events[50][0].meta.set).be.equal(0)
-                should(events[50][0].meta.phase).be.null()
-                should(events[50][0].data.name).be.equal('alpha')
-                should(events[50][0].data.time).be.equal(-10)
+                should(events[50][0].meta.phase).be.undefined()
+                should(events[50][0].data.attributes.name).be.equal('alpha')
+                should(events[50][0].data.attributes.time).be.equal(-10)
 
                 done()
             })
@@ -170,18 +168,18 @@ describe('Config', () => {
                 should(events[10]).be.length(1)
 
                 should(events[10][0].meta.set).be.equal(0)
-                should(events[10][0].meta.phase).be.equal('one')
-                should(events[10][0].data.name).be.equal('bravo')
-                should(events[10][0].data.time).be.equal(10)
+                should(events[10][0].meta.phase).be.equal(0)
+                should(events[10][0].data.attributes.name).be.equal('bravo')
+                should(events[10][0].data.attributes.time).be.equal(10)
 
                 should(events[50]).not.be.undefined()
                 should(events[50].constructor.name).be.equal('Array')
                 should(events[50]).be.length(1)
 
                 should(events[50][0].meta.set).be.equal(0)
-                should(events[50][0].meta.phase).be.equal('one')
-                should(events[50][0].data.name).be.equal('alpha')
-                should(events[50][0].data.time).be.equal(-10)
+                should(events[50][0].meta.phase).be.equal(0)
+                should(events[50][0].data.attributes.name).be.equal('alpha')
+                should(events[50][0].data.attributes.time).be.equal(-10)
 
                 done()
             })
@@ -225,18 +223,18 @@ describe('Config', () => {
                 should(events[10]).be.length(1)
 
                 should(events[10][0].meta.set).be.equal(0)
-                should(events[10][0].meta.phase).be.equal('one')
-                should(events[10][0].data.name).be.equal('alpha')
-                should(events[10][0].data.time).be.equal(10)
+                should(events[10][0].meta.phase).be.equal(0)
+                should(events[10][0].data.attributes.name).be.equal('alpha')
+                should(events[10][0].data.attributes.time).be.equal(10)
 
                 should(events[50]).not.be.undefined()
                 should(events[50].constructor.name).be.equal('Array')
                 should(events[50]).be.length(1)
 
                 should(events[50][0].meta.set).be.equal(1)
-                should(events[50][0].meta.phase).be.equal('two')
-                should(events[50][0].data.name).be.equal('bravo')
-                should(events[50][0].data.time).be.equal(-10)
+                should(events[50][0].meta.phase).be.equal(0)
+                should(events[50][0].data.attributes.name).be.equal('bravo')
+                should(events[50][0].data.attributes.time).be.equal(-10)
 
                 done()
             })
@@ -276,18 +274,18 @@ describe('Config', () => {
                 should(events[10]).be.length(1)
 
                 should(events[10][0].meta.set).be.equal(0)
-                should(events[10][0].meta.phase).be.equal('one')
-                should(events[10][0].data.name).be.equal('alpha')
-                should(events[10][0].data.time).be.equal(10)
+                should(events[10][0].meta.phase).be.equal(0)
+                should(events[10][0].data.attributes.name).be.equal('alpha')
+                should(events[10][0].data.attributes.time).be.equal(10)
 
                 should(events[50]).not.be.undefined()
                 should(events[50].constructor.name).be.equal('Array')
                 should(events[50]).be.length(1)
 
                 should(events[50][0].meta.set).be.equal(0)
-                should(events[50][0].meta.phase).be.equal('two')
-                should(events[50][0].data.name).be.equal('bravo')
-                should(events[50][0].data.time).be.equal(-10)
+                should(events[50][0].meta.phase).be.equal(1)
+                should(events[50][0].data.attributes.name).be.equal('bravo')
+                should(events[50][0].data.attributes.time).be.equal(-10)
 
                 done()
             })
@@ -325,27 +323,26 @@ describe('Config', () => {
                 should(events[10]).be.length(1)
 
                 should(events[10][0].meta.set).be.equal(0)
-                should(events[10][0].meta.phase).be.equal('one')
-                should(events[10][0].data.name).be.equal('alpha')
-                should(events[10][0].data.time).be.equal(10)
+                should(events[10][0].meta.phase).be.equal(0)
+                should(events[10][0].data.attributes.name).be.equal('alpha')
+                should(events[10][0].data.attributes.time).be.equal(10)
 
                 should(events[30]).not.be.undefined()
                 should(events[30].constructor.name).be.equal('Array')
                 should(events[30]).be.length(1)
 
                 should(events[30][0].meta.set).be.equal(0)
-                should(events[30][0].meta.phase).be.null()
-                should(events[30][0].data.name).be.equal('bravo')
-                should(events[30][0].data.time).be.equal(30)
+                should(events[30][0].meta.phase).be.undefined()
+                should(events[30][0].data.attributes.name).be.equal('bravo')
+                should(events[30][0].data.attributes.time).be.equal(30)
 
                 should(events[50]).not.be.undefined()
                 should(events[50].constructor.name).be.equal('Array')
                 should(events[50]).be.length(1)
 
-                should(events[50][0].meta.set).be.null()
-                should(events[50][0].meta.phase).be.null()
-                should(events[50][0].data.name).be.equal('charlie')
-                should(events[50][0].data.time).be.equal(-10)
+                should(events[50][0].meta).be.undefined()
+                should(events[50][0].data.attributes.name).be.equal('charlie')
+                should(events[50][0].data.attributes.time).be.equal(-10)
 
                 done()
             })

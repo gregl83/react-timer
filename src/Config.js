@@ -1,3 +1,22 @@
+class EventMeta {
+    constructor (set, phase) {
+        this.set = set
+        if (Number.isInteger(phase)) this.phase = phase
+    }
+}
+
+class Event {
+    constructor (meta, name, time) {
+        if (meta) this.meta = meta
+        this.data = {
+            attributes: {
+                name,
+                time
+            }
+        }
+    }
+}
+
 class Interval {
     constructor (set, phase, skip, duration) {
         this.set = set
@@ -16,63 +35,66 @@ export default class Config {
         this.events = {}
         this.init(config)
     }
-    static getMeta (set, phase) {
-        if (typeof set === 'undefined') set = null
-        if (typeof phase === 'undefined') phase = null
-
-        return {set, phase}
-    }
     init (config) {
-        for (const [index, set] of config.sets.entries()) {
-            let setStart = this.duration
+        this.events = Config.createEventIndex(config)
 
+        for (const [setIndex, set] of config.sets.entries()) {
             for (const phase of set.phases) {
-                let phaseStart = this.duration
-
-                let interval = new Interval(index, phase.name, phase.skip, phase.duration)
-
-                this.addInterval(interval)
-
-                let meta = Config.getMeta(index, phase.name)
-                this.initEvents(phaseStart, this.duration, meta, phase.events, 'phase')
+                this.addInterval(new Interval(setIndex, phase.name, phase.skip, phase.duration))
             }
-
-            let meta = Config.getMeta(index)
-            this.initEvents(setStart, this.duration, meta, set.events, 'set')
-        }
-
-        let meta = Config.getMeta()
-        this.initEvents(0, this.duration, meta, config.events)
-    }
-    initEvents (start, end, meta, events, type) {
-        if (Array.isArray(events)) {
-            let allEvents = events
-
-            if (typeof type !== 'undefined') {
-                let typeEvents = [
-                    {name: `${type}.started`, time: start},
-                    {name: `${type}.finished`, time: end - start}
-                ]
-                allEvents = typeEvents.concat(events)
-            }
-
-            this.addEvents(start, end, meta, allEvents)
         }
     }
-    addEvents (start, end, meta, events) {
+    static createEventIndex (config) {
+        let index = {}
+
+        let elapsed = 0
+        for (const [setIndex, set] of config.sets.entries()) {
+            let setElapsed = elapsed
+            let setDuration = 0
+
+            for (const [phaseIndex, phase] of set.phases.entries()) {
+                let eventsMeta = new EventMeta(setIndex, phaseIndex)
+                let eventsGroup = Config.createEventsGroup('set', phase.duration, phase.events)
+                Config.addEventsToIndex(elapsed, phase.duration, eventsGroup, eventsMeta, index)
+
+                elapsed += phase.duration
+                setDuration += phase.duration
+            }
+
+            let eventsMeta = new EventMeta(setIndex)
+            let eventsGroup = Config.createEventsGroup('set', setDuration, set.events)
+            Config.addEventsToIndex(setElapsed, setDuration, eventsGroup, eventsMeta, index)
+        }
+
+        let eventsGroup = Config.createEventsGroup('session', elapsed, config.events)
+        Config.addEventsToIndex(0, elapsed, eventsGroup, null, index)
+
+        return index
+    }
+    static createEventsGroup (name, duration, events) {
+        if (!Array.isArray(events)) return []
+
+        let eventsGroup = events.slice()
+        eventsGroup.push({name: `${name}.started`, time: 0})
+        eventsGroup.push({name: `${name}.finished`, time: duration})
+
+        return eventsGroup
+    }
+    static addEventsToIndex (start, duration, events, meta, index) {
         for (const event of events) {
-            this.addEvent(start, end, meta, event)
+            if (Math.abs(event.time) > duration) throw new Error('event time must be within interval duration')
+
+            let absoluteTime = event.time >= 0 ? event.time : duration + event.time
+            let key = absoluteTime + start
+
+            if (!Array.isArray(index[key])) index[key] = []
+
+            index[key].push(new Event(meta, event.name, event.time))
         }
     }
-    addEvent (start, end, meta, event) {
-        if (!Number.isInteger(event.time)) throw new Error('event time must be an integer')
-        if (Math.abs(event.time) > end - start) throw new Error('event time must within interval duration')
-
-        let elapsed = event.time >= 0 ? start + event.time : end + event.time
-
-        if (!Array.isArray(this.events[elapsed])) this.events[elapsed] = []
-
-        this.events[elapsed].push({meta: meta, data: event})
+    getEvents (elapsed, skipped) {
+        let key = elapsed + skipped
+        return Array.isArray(this.events[key]) ? this.events[key] : []
     }
     addInterval (interval) {
         this.intervals.push(interval)

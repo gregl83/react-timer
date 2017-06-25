@@ -32,6 +32,16 @@ Stop has been called and timer is stopped
 
 Reset has been called and timer is reset
 
+### Session Events
+
+#### session.started
+
+Session has started
+
+#### session.finished
+
+Session has finished
+
 ### Set Events
 
 #### set.started

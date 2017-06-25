@@ -23,18 +23,26 @@ timer.addListener('stopped', () => {
 })
 timer.addListener('reset', () => console.log('reset', timer.props))
 
+function handler (event) {
+    console.log(event.data.attributes.name, timer.props)
+}
+
+// session events
+timer.addListener('session.started', handler)
+timer.addListener('session.finished', handler)
+
 // set events
-timer.addListener('set.started', () => console.log('set.started', timer.props))
-timer.addListener('set.finished', () => console.log('set.finished', timer.props))
+timer.addListener('set.started', handler)
+timer.addListener('set.finished', handler)
 
 // phase events
-timer.addListener('phase.started', () => console.log('phase.started', timer.props))
-timer.addListener('phase.finished', () => console.log('phase.finished', timer.props))
+timer.addListener('phase.started', handler)
+timer.addListener('phase.finished', handler)
 
 // custom events
-timer.addListener('alpha-reminder', () => console.log('alpha-reminder', timer.props))
-timer.addListener('bravo-reminder', () => console.log('bravo-reminder', timer.props))
-timer.addListener('set-reminder', () => console.log('set-reminder', timer.props))
-timer.addListener('session-reminder', () => console.log('session-reminder', timer.props))
+timer.addListener('alpha-reminder', handler)
+timer.addListener('bravo-reminder', handler)
+timer.addListener('set-reminder', handler)
+timer.addListener('session-reminder', handler)
 
 timer.start()
