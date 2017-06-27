@@ -1,3 +1,29 @@
+class Session {
+    constructor (name, fixed, duration, events) {
+        this.name = name
+        this.fixed = fixed
+        this.duration = duration
+        this.events = events
+    }
+}
+
+class Set {
+    constructor (duration, events) {
+        this.duration = duration
+        this.events = events
+    }
+}
+
+class Phase {
+    constructor (set, name, duration, skip, events) {
+        this.set = set
+        this.name = name
+        this.duration = duration
+        this.skip = skip
+        this.events = events
+    }
+}
+
 class EventMeta {
     constructor (set, phase) {
         this.set = set
@@ -19,81 +45,71 @@ class Event {
 
 export default class Config {
     constructor (config) {
-        this.name = config.name
-        this.fixed = config.fixed
-        this.duration = 0
-        this.phases = Config.createPhaseIndex(config)
-        this.events = Config.createEventIndex(config)
+        this.session = Config.createSession(config)
+        this.sets = Config.createSets(config)
+        this.phases = Config.createPhases(config)
     }
-    static createPhaseIndex (config) {
-        let index = {}
+    static createSession (config) {
+        let sessionDuration = 0
 
-        for (const [setIndex, set] of config.sets.entries()) {
-            for (const [phaseIndex, phase] of set.phases.entries()) {
-                Config.addPhaseToIndex(setIndex, phaseIndex, phase, index)
+        for (const set of config.sets) {
+            for (const phase of set.phases) {
+                sessionDuration += phase.duration
             }
         }
 
-        return index
-    }
-    static addPhaseToIndex (setIndex, phaseIndex, phase, index) {
-        let key = `${setIndex}.${phaseIndex}`
-        index[key] = phase
-    }
-    static createEventIndex (config) {
-        let index = {}
+        let events = Config.createEventsIndex(sessionDuration, null, config.events)
 
-        let elapsed = 0
+        return new Session(config.name, config.fixed, sessionDuration, events)
+    }
+    static createSets (config) {
+        let sets = []
+
         for (const [setIndex, set] of config.sets.entries()) {
-            let setElapsed = elapsed
             let setDuration = 0
 
-            for (const [phaseIndex, phase] of set.phases.entries()) {
-                let eventsMeta = new EventMeta(setIndex, phaseIndex)
-                let eventsGroup = Config.createEventsGroup('phase', phase.duration, phase.events)
-                Config.addEventsToIndex(elapsed, phase.duration, eventsGroup, eventsMeta, index)
-
-                elapsed += phase.duration
+            for (const phase of set.phases) {
                 setDuration += phase.duration
             }
 
-            let eventsMeta = new EventMeta(setIndex)
-            let eventsGroup = Config.createEventsGroup('set', setDuration, set.events)
-            Config.addEventsToIndex(setElapsed, setDuration, eventsGroup, eventsMeta, index)
+            let meta = new EventMeta(setIndex)
+            let events = Config.createEventsIndex(setDuration, meta, set.events)
+
+            sets.push(new Set(setDuration, events))
         }
 
-        let eventsGroup = Config.createEventsGroup('session', elapsed, config.events)
-        Config.addEventsToIndex(0, elapsed, eventsGroup, null, index)
-
-        return index
+        return sets
     }
-    static createEventsGroup (name, duration, events) {
-        if (!Array.isArray(events)) return []
+    static createPhases (config) {
+        let phases = []
 
-        let eventsGroup = events.slice()
-        eventsGroup.push({name: `${name}.started`, time: 0})
-        eventsGroup.push({name: `${name}.finished`, time: duration})
+        for (const [setIndex, set] of config.sets.entries()) {
+            for (const [phaseIndex, phase] of set.phases.entries()) {
+                let meta = new EventMeta(setIndex, phaseIndex)
+                let events = Config.createEventsIndex(phase.duration, meta, phase.events)
 
-        return eventsGroup
+                phases.push(new Phase(setIndex, phase.name, phase.duration, phase.skip, events))
+            }
+        }
+
+        return phases
     }
-    static addEventsToIndex (start, duration, events, meta, index) {
+    static createEventsIndex (duration, meta, events) {
+        let index = {}
+
         for (const event of events) {
             if (Math.abs(event.time) > duration) throw new Error('event time must be within interval duration')
 
-            let absoluteTime = event.time >= 0 ? event.time : duration + event.time
-            let key = absoluteTime + start
-
-            if (!Array.isArray(index[key])) index[key] = []
-
-            index[key].push(new Event(meta, event.name, event.time))
+            Config.addEventToIndex(meta, event, index)
         }
+
+        return index
     }
-    getEvents (elapsed, skipped) {
-        let key = elapsed + skipped
-        return Array.isArray(this.events[key]) ? this.events[key] : []
-    }
-    getPhase (setIndex, phaseIndex) {
-        let key = `${setIndex}.${phaseIndex}`
-        return this.phases[key]
+    static addEventToIndex (meta, event, index) {
+        let key = event.time
+
+        if (Array.isArray(index[key])) index[key] = []
+
+        index.push(new Event(meta, event.name, event.time))
     }
 }
