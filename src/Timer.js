@@ -12,16 +12,20 @@ export default class Timer extends EventEmitter {
         this.interval.addListener('tick', () => this.tick())
 
         this.props = {
-            started: null,
-            elapsed: 0,
-            skipped: 0,
+            session: {
+                started: null,
+                elapsed: 0,
+                offset: 0
+            },
             set: {
                 index: 0,
-                elapsed: 0
+                elapsed: 0,
+                offset: 0
             },
             phase: {
                 index: 0,
-                elapsed: 0
+                elapsed: 0,
+                offset: 0
             },
             state: null
         }
@@ -61,40 +65,50 @@ export default class Timer extends EventEmitter {
         return (this.props.state & state) === state
     }
     emitEvents () {
-        let events = this.config.getEvents(this.props.elapsed, this.props.set, this.props.phase)
+        let events = this.config.getEvents(this.props.session, this.props.set, this.props.phase)
+
+        let sessionFinished = false
+        let phaseFinished = false
         for (const event of events) {
             let eventName = event.data.attributes.name
 
-            if (eventName === 'phase.started') {
-                if (this.props.set.index !== event.meta.set) {
-                    this.props.set = {
-                        index: event.meta.set,
-                        elapsed: 0
-                    }
-                }
+            if (eventName === 'session.finished') {
+                setTimeout(() => this.stop(), 0)
+                sessionFinished = true
+            }
 
-                this.props.phase = {
-                    index: event.meta.phase,
-                    elapsed: 0
+            if (eventName === 'set.finished') {
+                this.props.set = {
+                    index: event.meta.set + 1,
+                    elapsed: 0,
+                    offset: 0
                 }
             }
-            else if (eventName === 'session.finished') setTimeout(() => this.stop(), 0)
+
+            if (eventName === 'phase.finished') {
+                this.props.phase = {
+                    index: event.meta.phase + 1,
+                    elapsed: 0,
+                    offset: 0
+                }
+                phaseFinished = true
+            }
 
             this.emit(eventName, event)
         }
+
+        if (!sessionFinished && phaseFinished) this.emitEvents()
     }
     tick () {
-        this.props.elapsed++
+        this.props.session.elapsed++
         this.props.set.elapsed++
         this.props.phase.elapsed++
-
         this.emit('ticked')
-
         this.emitEvents()
     }
     start () {
         if (this.is(Timer.states.READY) && !this.is(Timer.states.STOPPED)) {
-            this.props.started = Date.now()
+            this.props.session.started = Date.now()
             this.interval.start()
             this.state = Timer.states.STARTED
             this.emit('started')
@@ -110,11 +124,13 @@ export default class Timer extends EventEmitter {
     }
     skip () {
         if (this.is(Timer.states.STARTED) && !this.is(Timer.states.STOPPED)) {
-            if (this.props.phase.skip) {
-                this.props.skipped += this.props.phase.elapsed - this.props.elapsed
-                this.emit('skipped')
-                this.emitEvents()
-            }
+            let phase = this.config.phases[this.props.phase.index]
+            let offset = phase.duration - this.props.phase.elapsed
+            this.props.session.offset += offset
+            this.props.set.offset += offset
+            this.props.phase.offset += offset
+            this.emit('skipped')
+            this.emitEvents(offset)
         }
     }
     stop () {
@@ -127,8 +143,8 @@ export default class Timer extends EventEmitter {
     reset () {
         if (this.is(Timer.states.STARTED)) {
             this.stop()
-            this.props.started = null
-            this.props.elapsed = 0
+            this.props.session.started = null
+            this.props.session.elapsed = 0
             this.state = Timer.states.READY
             this.emit('reset')
         }

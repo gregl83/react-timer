@@ -3,14 +3,16 @@ class EventsIndex {
         this.duration = duration
         this.events = events
     }
-    fetch (elapsed) {
+    fetch (index) {
         let events = []
 
+        let elapsed = index.elapsed + index.offset
+
         let fromStart = elapsed
-        if (Array.isArray(this.events[fromStart])) events.concat(this.events[fromStart])
+        if (Array.isArray(this.events[fromStart])) events = events.concat(this.events[fromStart])
 
         let fromEnd = (this.duration - elapsed) * -1
-        if (Array.isArray(this.events[fromEnd])) events.concat(this.events[fromEnd])
+        if (fromEnd && Array.isArray(this.events[fromEnd])) events = events.concat(this.events[fromEnd])
 
         return events
     }
@@ -75,6 +77,9 @@ export default class Config {
 
         let events = Config.createEventsIndex(sessionDuration, null, config.events)
 
+        Config.addEventToIndex(null, {name: 'session.started', time: 0}, events)
+        Config.addEventToIndex(null, {name: 'session.finished', time: sessionDuration}, events)
+
         return new Session(config.name, config.fixed, sessionDuration, events)
     }
     static createSets (config) {
@@ -90,6 +95,9 @@ export default class Config {
             let meta = new EventMeta(setIndex)
             let events = Config.createEventsIndex(setDuration, meta, set.events)
 
+            Config.addEventToIndex(meta, {name: 'set.started', time: 0}, events)
+            Config.addEventToIndex(meta, {name: 'set.finished', time: setDuration}, events)
+
             sets.push(new Set(setDuration, events))
         }
 
@@ -102,6 +110,9 @@ export default class Config {
             for (const [phaseIndex, phase] of set.phases.entries()) {
                 let meta = new EventMeta(setIndex, phaseIndex)
                 let events = Config.createEventsIndex(phase.duration, meta, phase.events)
+
+                Config.addEventToIndex(meta, {name: 'phase.started', time: 0}, events)
+                Config.addEventToIndex(meta, {name: 'phase.finished', time: phase.duration}, events)
 
                 phases.push(new Phase(setIndex, phase.name, phase.duration, phase.skip, events))
             }
@@ -129,14 +140,14 @@ export default class Config {
 
         index[key].push(new Event(meta, event.name, event.time))
     }
-    getEvents (elapsed, set, phase) {
+    getEvents (session, set, phase) {
         let events = []
 
-        events.concat(this.session.fetch(elapsed))
+        events = events.concat(this.session.fetch(session))
 
-        if (this.sets.length) events.concat(this.sets[set.index].fetch(set.elapsed))
+        if (this.sets.length) events = events.concat(this.sets[set.index].fetch(set))
 
-        if (this.phases.length) events.concat(this.phases[phase.index].fetch(phase.elapsed))
+        if (this.phases.length) events = events.concat(this.phases[phase.index].fetch(phase))
 
         return events
     }
