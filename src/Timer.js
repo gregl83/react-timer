@@ -15,7 +15,14 @@ export default class Timer extends EventEmitter {
             started: null,
             elapsed: 0,
             skipped: 0,
-            phaseEndTime: 0,
+            set: {
+                index: 0,
+                elapsed: 0
+            },
+            phase: {
+                index: 0,
+                elapsed: 0
+            },
             state: null
         }
 
@@ -54,23 +61,35 @@ export default class Timer extends EventEmitter {
         return (this.props.state & state) === state
     }
     emitEvents () {
-        let events = this.config.getEvents(this.props.elapsed, this.props.skipped)
+        let events = this.config.getEvents(this.props.elapsed, this.props.set, this.props.phase)
         for (const event of events) {
             let eventName = event.data.attributes.name
 
             if (eventName === 'phase.started') {
-                let phase = this.config.getPhase(event.meta.set, event.meta.phase)
-                this.props.phaseEndTime = this.props.elapsed + phase.duration
-            }
+                if (this.props.set.index !== event.meta.set) {
+                    this.props.set = {
+                        index: event.meta.set,
+                        elapsed: 0
+                    }
+                }
 
-            if (eventName === 'session.finished') setTimeout(() => this.stop(), 0)
+                this.props.phase = {
+                    index: event.meta.phase,
+                    elapsed: 0
+                }
+            }
+            else if (eventName === 'session.finished') setTimeout(() => this.stop(), 0)
 
             this.emit(eventName, event)
         }
     }
     tick () {
         this.props.elapsed++
+        this.props.set.elapsed++
+        this.props.phase.elapsed++
+
         this.emit('ticked')
+
         this.emitEvents()
     }
     start () {
@@ -91,12 +110,11 @@ export default class Timer extends EventEmitter {
     }
     skip () {
         if (this.is(Timer.states.STARTED) && !this.is(Timer.states.STOPPED)) {
-
-            // todo skip phase
-
-            // todo build payload for skipped event
-
-            this.emit('skipped') // fixme add event data
+            if (this.props.phase.skip) {
+                this.props.skipped += this.props.phase.elapsed - this.props.elapsed
+                this.emit('skipped')
+                this.emitEvents()
+            }
         }
     }
     stop () {

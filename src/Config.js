@@ -1,26 +1,18 @@
-class Session {
-    constructor (name, fixed, duration, events) {
-        this.name = name
-        this.fixed = fixed
-        this.duration = duration
-        this.events = events
-    }
-}
-
-class Set {
+class EventsIndex {
     constructor (duration, events) {
         this.duration = duration
         this.events = events
     }
-}
+    fetch (elapsed) {
+        let events = []
 
-class Phase {
-    constructor (set, name, duration, skip, events) {
-        this.set = set
-        this.name = name
-        this.duration = duration
-        this.skip = skip
-        this.events = events
+        let fromStart = elapsed
+        if (Array.isArray(this.events[fromStart])) events.concat(this.events[fromStart])
+
+        let fromEnd = (this.duration - elapsed) * -1
+        if (Array.isArray(this.events[fromEnd])) events.concat(this.events[fromEnd])
+
+        return events
     }
 }
 
@@ -40,6 +32,29 @@ class Event {
                 time
             }
         }
+    }
+}
+
+class Session extends EventsIndex {
+    constructor (name, fixed, duration, events) {
+        super(duration, events)
+        this.name = name
+        this.fixed = fixed
+    }
+}
+
+class Set extends EventsIndex {
+    constructor (duration, events) {
+        super(duration, events)
+    }
+}
+
+class Phase extends EventsIndex {
+    constructor (set, name, duration, skip, events) {
+        super(duration, events)
+        this.set = set
+        this.name = name
+        this.skip = skip
     }
 }
 
@@ -97,6 +112,8 @@ export default class Config {
     static createEventsIndex (duration, meta, events) {
         let index = {}
 
+        if (!events) return index
+
         for (const event of events) {
             if (Math.abs(event.time) > duration) throw new Error('event time must be within interval duration')
 
@@ -108,8 +125,19 @@ export default class Config {
     static addEventToIndex (meta, event, index) {
         let key = event.time
 
-        if (Array.isArray(index[key])) index[key] = []
+        if (!Array.isArray(index[key])) index[key] = []
 
-        index.push(new Event(meta, event.name, event.time))
+        index[key].push(new Event(meta, event.name, event.time))
+    }
+    getEvents (elapsed, set, phase) {
+        let events = []
+
+        events.concat(this.session.fetch(elapsed))
+
+        if (this.sets.length) events.concat(this.sets[set.index].fetch(set.elapsed))
+
+        if (this.phases.length) events.concat(this.phases[phase.index].fetch(phase.elapsed))
+
+        return events
     }
 }
