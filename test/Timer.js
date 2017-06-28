@@ -5,7 +5,7 @@ import should from "should"
 let config = {
     name: 'test',
     fixed: false,
-    sets: [],
+    sets: [{phases: [{name: 'one', duration: 60, skip: false}]}],
     events: []
 }
 

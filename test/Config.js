@@ -16,13 +16,13 @@ describe('Config', () => {
 
             let session = config.session
 
-            // fixme - test for standard events
-
             should(session.name).be.equal(raw.name)
             should(session.fixed).be.true()
             should(session.duration).be.equal(0)
-            should(session.events).be.type('object')
-            should(session.events).be.empty()
+            should(session.events[0].constructor.name).be.equal('Array')
+            should(session.events[0]).be.length(2)
+
+            // todo - more robust standard event tests
 
             done()
         })
@@ -79,11 +79,13 @@ describe('Config', () => {
 
             let set = config.sets[0]
 
-            // fixme - test for standard events
-
             should(set.duration).be.equal(raw.sets[0].phases[0].duration)
-            should(set.events).be.type('object')
-            should(set.events).be.empty()
+            should(set.events[0].constructor.name).be.equal('Array')
+            should(set.events[0]).be.length(1)
+            should(set.events[60].constructor.name).be.equal('Array')
+            should(set.events[60]).be.length(1)
+
+            // todo - more robust standard event tests
 
             done()
         })
@@ -201,14 +203,16 @@ describe('Config', () => {
 
             let phase = config.phases[0]
 
-            // fixme - test for standard events
-
             should(phase.set).be.equal(0)
             should(phase.name).be.equal(raw.sets[0].phases[0].name)
             should(phase.duration).be.equal(raw.sets[0].phases[0].duration)
             should(phase.skip).be.equal(raw.sets[0].phases[0].skip)
-            should(phase.events).be.type('object')
-            should(phase.events).be.empty()
+            should(phase.events[0].constructor.name).be.equal('Array')
+            should(phase.events[0]).be.length(1)
+            should(phase.events[60].constructor.name).be.equal('Array')
+            should(phase.events[60]).be.length(1)
+
+            // todo - more robust standard event tests
 
             done()
         })
