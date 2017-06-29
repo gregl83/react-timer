@@ -5,22 +5,30 @@ let timer = new Timer(config)
 
 // timer events - utilizes timer ui
 timer.addListener('ticked', () => console.log('ticked', timer.props))
+
 timer.addListener('started', () => {
     console.log('started', timer.props)
 
-    if (!timer.props.elapsed) setTimeout(() => timer.pause(), 3000)
-    else setTimeout(() => timer.stop(), 3000)
+    if (!timer.props.session.elapsed) setTimeout(() => timer.pause(), 3000)
+    else setTimeout(() => timer.skip(), 3000)
 })
+
 timer.addListener('paused', () => {
     console.log('paused', timer.props)
 
     setTimeout(() => timer.start(), 3000)
 })
+
+timer.addListener('skipped', () => {
+    setTimeout(() => timer.stop(), 3000)
+})
+
 timer.addListener('stopped', () => {
     console.log('stopped', timer.props)
 
     setTimeout(() => timer.reset(), 1000)
 })
+
 timer.addListener('reset', () => console.log('reset', timer.props))
 
 function handler (event) {
