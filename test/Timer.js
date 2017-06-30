@@ -118,5 +118,49 @@ describe('Timer', () => {
         })
     })
 
-    // todo add timer expectations / assertions
+    describe('non-fixed config', () => {
+        it('completes run', function(done) {
+            this.timeout(4020)
+
+            let config = {
+                name: 'test',
+                fixed: false,
+                sets: [
+                    {
+                        phases: [
+                            {name: 'one', duration: 1, skip: false},
+                            {name: 'two', duration: 1, skip: false, events: [{name: 'phase-two', time: 1}]}
+                        ],
+                        events: [{name: 'set-one', time: -2}]
+                    },
+                    {
+                        phases: [
+                            {name: 'three', duration: 1, skip: false},
+                            {name: 'four', duration: 1, skip: false, events: [{name: 'phase-four', time: 1}]}
+                        ],
+                        events: [{name: 'set-two', time: -2}]
+                    }
+                ],
+                events: [{name: 'session', time: 2}]
+            }
+
+            let timer = new Timer(config)
+
+            // todo - test all the events
+
+            // todo - test with skip
+
+            // todo - test the final duration
+
+            timer.addListener('stopped', () => {
+                done()
+            })
+
+            timer.start()
+        })
+    })
+
+    describe('fixed config', () => {
+        // todo add timer expectations / assertions
+    })
 })
