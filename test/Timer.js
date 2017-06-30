@@ -120,7 +120,7 @@ describe('Timer', () => {
 
     describe('non-fixed config', () => {
         it('completes run', function(done) {
-            this.timeout(4020)
+            this.timeout(3020)
 
             let config = {
                 name: 'test',
@@ -146,17 +146,45 @@ describe('Timer', () => {
 
             let timer = new Timer(config)
 
-            // todo - test all the events
+            let start = sinon.spy()
+            timer.addListener('started', start)
 
-            // todo - test with skip
+            let tick = sinon.spy()
+            timer.addListener('ticked', tick)
 
-            // todo - test the final duration
+            let pause = sinon.spy()
+            timer.addListener('paused', pause)
+
+            let skip = sinon.spy()
+            timer.addListener('skipped', skip)
 
             timer.addListener('stopped', () => {
+                should(start.callCount).be.equal(2)
+
+                should(tick.callCount).be.equal(3)
+
+                should(pause.callCount).be.equal(1)
+
+                should(skip.callCount).be.equal(1)
+
+                should(timer.props.session.elapsed).be.equal(3)
+
                 done()
             })
 
             timer.start()
+
+            setTimeout(() => {
+                timer.pause()
+
+                setTimeout(() => {
+                    timer.start()
+                }, 500)
+            }, 500)
+
+            setTimeout(() => {
+                timer.skip()
+            }, 1750)
         })
     })
 
