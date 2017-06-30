@@ -69,6 +69,22 @@ describe('Timer', () => {
             }, 20)
         })
 
+        it('paused event emitted', done => {
+            let timer = new Timer(config)
+
+            let skip = sinon.spy()
+
+            timer.addListener('skipped', skip)
+
+            timer.start()
+            timer.skip()
+
+            setTimeout(() => {
+                should(skip.called).be.true()
+                done()
+            }, 20)
+        })
+
         it('stopped event emitted', done => {
             let timer = new Timer(config)
 
