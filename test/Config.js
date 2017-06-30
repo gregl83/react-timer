@@ -316,10 +316,6 @@ describe('Config', () => {
     })
 
     it('events in every scope', done => {
-        return done()
-
-        // fixme - move to getEvents tests
-
         let raw = {
             name: 'every-scope',
             fixed: false,
@@ -347,33 +343,34 @@ describe('Config', () => {
 
         let config = new Config(raw)
 
-        let events = config.session.events
+        let sessionEvents = config.session.events
 
-        should(events[10]).not.be.undefined()
-        should(events[10].constructor.name).be.equal('Array')
-        should(events[10]).be.length(1)
+        should(sessionEvents[-10]).not.be.undefined()
+        should(sessionEvents[-10].constructor.name).be.equal('Array')
+        should(sessionEvents[-10]).be.length(1)
 
-        should(events[10][0].meta.set).be.equal(0)
-        should(events[10][0].meta.phase).be.equal(0)
-        should(events[10][0].data.attributes.name).be.equal('alpha')
-        should(events[10][0].data.attributes.time).be.equal(10)
+        should(sessionEvents[-10][0].meta).be.undefined()
+        should(sessionEvents[-10][0].data.attributes).be.deepEqual(raw.events[0])
 
-        should(events[30]).not.be.undefined()
-        should(events[30].constructor.name).be.equal('Array')
-        should(events[30]).be.length(1)
+        let setEvents = config.sets[0].events
 
-        should(events[30][0].meta.set).be.equal(0)
-        should(events[30][0].meta.phase).be.undefined()
-        should(events[30][0].data.attributes.name).be.equal('bravo')
-        should(events[30][0].data.attributes.time).be.equal(30)
+        should(setEvents[30]).not.be.undefined()
+        should(setEvents[30].constructor.name).be.equal('Array')
+        should(setEvents[30]).be.length(1)
 
-        should(events[50]).not.be.undefined()
-        should(events[50].constructor.name).be.equal('Array')
-        should(events[50]).be.length(1)
+        should(setEvents[30][0].meta.set).be.equal(0)
+        should(setEvents[30][0].meta.phase).be.undefined()
+        should(setEvents[30][0].data.attributes).be.deepEqual(raw.sets[0].events[0])
 
-        should(events[50][0].meta).be.undefined()
-        should(events[50][0].data.attributes.name).be.equal('charlie')
-        should(events[50][0].data.attributes.time).be.equal(-10)
+        let phaseEvents = config.phases[0].events
+
+        should(phaseEvents[10]).not.be.undefined()
+        should(phaseEvents[10].constructor.name).be.equal('Array')
+        should(phaseEvents[10]).be.length(1)
+
+        should(phaseEvents[10][0].meta.set).be.equal(0)
+        should(phaseEvents[10][0].meta.phase).be.equal(0)
+        should(phaseEvents[10][0].data.attributes).be.deepEqual(raw.sets[0].phases[0].events[0])
 
         done()
     })
