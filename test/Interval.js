@@ -136,7 +136,7 @@ describe('Interval', () => {
         })
     })
 
-    describe('run', () => {
+    describe('runs', () => {
         it('ticks once per second', function(done) {
             this.timeout(4100)
 

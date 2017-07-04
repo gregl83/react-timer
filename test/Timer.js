@@ -132,8 +132,8 @@ describe('Timer', () => {
         })
     })
 
-    describe('non-fixed config', () => {
-        it('completes run', function(done) {
+    describe('runs', () => {
+        it('skips with non-fixed duration', function(done) {
             this.timeout(6750)
 
             let config = {
@@ -222,6 +222,114 @@ describe('Timer', () => {
                 should(phaseFour.callCount).be.equal(1)
 
                 should(timer.props.session.elapsed).be.equal(7)
+
+                done()
+            })
+
+            timer.start()
+
+            setTimeout(() => {
+                timer.pause()
+
+                setTimeout(() => {
+                    timer.start()
+                }, 520)
+            }, 1020)
+
+            setTimeout(() => {
+                timer.skip()
+            }, 2750)
+        })
+
+        it('skips with fixed duration', function(done) {
+            this.timeout(8750)
+
+            let config = {
+                name: 'test',
+                fixed: true,
+                sets: [
+                    {
+                        phases: [
+                            {name: 'one', duration: 2, skip: false},
+                            {name: 'two', duration: 2, skip: false, events: [{name: 'phase-two', time: 1}]}
+                        ],
+                        events: [{name: 'set-one', time: -2}]
+                    },
+                    {
+                        phases: [
+                            {name: 'three', duration: 2, skip: false},
+                            {name: 'four', duration: 2, skip: false, events: [{name: 'phase-four', time: 1}]}
+                        ],
+                        events: [{name: 'set-two', time: -2}]
+                    }
+                ],
+                events: [{name: 'session', time: 2}]
+            }
+
+            let timer = new Timer(config)
+
+            let start = sinon.spy()
+            timer.addListener('started', start)
+
+            let tick = sinon.spy()
+            timer.addListener('ticked', tick)
+
+            let pause = sinon.spy()
+            timer.addListener('paused', pause)
+
+            let skip = sinon.spy()
+            timer.addListener('skipped', skip)
+
+            let sessionStarted = sinon.spy()
+            timer.addListener('session.started', sessionStarted)
+
+            let sessionFinished = sinon.spy()
+            timer.addListener('session.finished', sessionFinished)
+
+            let setStarted = sinon.spy()
+            timer.addListener('set.started', setStarted)
+
+            let setFinished = sinon.spy()
+            timer.addListener('set.finished', setFinished)
+
+            let phaseStarted = sinon.spy()
+            timer.addListener('phase.started', phaseStarted)
+
+            let phaseFinished = sinon.spy()
+            timer.addListener('phase.finished', phaseFinished)
+
+            let phaseTwo = sinon.spy()
+            timer.addListener('phase-two', phaseTwo)
+
+            let phaseFour = sinon.spy()
+            timer.addListener('phase-four', phaseFour)
+
+            timer.addListener('stopped', () => {
+                should(start.callCount).be.equal(2)
+
+                should(tick.callCount).be.equal(8)
+
+                should(pause.callCount).be.equal(1)
+
+                should(skip.callCount).be.equal(1)
+
+                should(sessionStarted.callCount).be.equal(1)
+
+                should(sessionFinished.callCount).be.equal(1)
+
+                should(setStarted.callCount).be.equal(2)
+
+                should(setFinished.callCount).be.equal(2)
+
+                should(phaseStarted.callCount).be.equal(4)
+
+                should(phaseFinished.callCount).be.equal(4)
+
+                should(phaseTwo.callCount).be.equal(1)
+
+                should(phaseFour.callCount).be.equal(1)
+
+                should(timer.props.session.elapsed).be.equal(8)
 
                 done()
             })
