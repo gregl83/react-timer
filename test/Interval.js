@@ -135,4 +135,25 @@ describe('Interval', () => {
             done()
         })
     })
+
+    describe('run', () => {
+        it('ticks once per second', function(done) {
+            this.timeout(4100)
+
+            let interval = new Interval
+
+            let tick = sinon.spy()
+            interval.addListener('tick', tick)
+
+            interval.start()
+
+            setTimeout(() => {
+                should(tick.callCount).be.equal(4)
+
+                interval.stop()
+
+                done()
+            }, 4020)
+        })
+    })
 })

@@ -34,6 +34,9 @@ describe('Timer', () => {
 
             setTimeout(() => {
                 should(start.called).be.true()
+
+                timer.stop()
+
                 done()
             }, 20)
         })
@@ -49,6 +52,9 @@ describe('Timer', () => {
 
             setTimeout(() => {
                 should(ticked.called).be.true()
+
+                timer.stop()
+
                 done()
             }, 1020)
         })
@@ -65,6 +71,9 @@ describe('Timer', () => {
 
             setTimeout(() => {
                 should(pause.called).be.true()
+
+                timer.stop()
+
                 done()
             }, 20)
         })
@@ -81,6 +90,9 @@ describe('Timer', () => {
 
             setTimeout(() => {
                 should(skip.called).be.true()
+
+                timer.stop()
+
                 done()
             }, 20)
         })
@@ -113,6 +125,8 @@ describe('Timer', () => {
 
             setTimeout(() => {
                 should(reset.called).be.true()
+
+                timer.stop()
                 done()
             }, 20)
         })
@@ -120,7 +134,7 @@ describe('Timer', () => {
 
     describe('non-fixed config', () => {
         it('completes run', function(done) {
-            this.timeout(3020)
+            this.timeout(6750)
 
             let config = {
                 name: 'test',
@@ -128,15 +142,15 @@ describe('Timer', () => {
                 sets: [
                     {
                         phases: [
-                            {name: 'one', duration: 1, skip: false},
-                            {name: 'two', duration: 1, skip: false, events: [{name: 'phase-two', time: 1}]}
+                            {name: 'one', duration: 2, skip: false},
+                            {name: 'two', duration: 2, skip: false, events: [{name: 'phase-two', time: 1}]}
                         ],
                         events: [{name: 'set-one', time: -2}]
                     },
                     {
                         phases: [
-                            {name: 'three', duration: 1, skip: false},
-                            {name: 'four', duration: 1, skip: false, events: [{name: 'phase-four', time: 1}]}
+                            {name: 'three', duration: 2, skip: false},
+                            {name: 'four', duration: 2, skip: false, events: [{name: 'phase-four', time: 1}]}
                         ],
                         events: [{name: 'set-two', time: -2}]
                     }
@@ -158,16 +172,56 @@ describe('Timer', () => {
             let skip = sinon.spy()
             timer.addListener('skipped', skip)
 
+            let sessionStarted = sinon.spy()
+            timer.addListener('session.started', sessionStarted)
+
+            let sessionFinished = sinon.spy()
+            timer.addListener('session.finished', sessionFinished)
+
+            let setStarted = sinon.spy()
+            timer.addListener('set.started', setStarted)
+
+            let setFinished = sinon.spy()
+            timer.addListener('set.finished', setFinished)
+
+            let phaseStarted = sinon.spy()
+            timer.addListener('phase.started', phaseStarted)
+
+            let phaseFinished = sinon.spy()
+            timer.addListener('phase.finished', phaseFinished)
+
+            let phaseTwo = sinon.spy()
+            timer.addListener('phase-two', phaseTwo)
+
+            let phaseFour = sinon.spy()
+            timer.addListener('phase-four', phaseFour)
+
             timer.addListener('stopped', () => {
                 should(start.callCount).be.equal(2)
 
-                should(tick.callCount).be.equal(3)
+                should(tick.callCount).be.equal(7)
 
                 should(pause.callCount).be.equal(1)
 
                 should(skip.callCount).be.equal(1)
 
-                should(timer.props.session.elapsed).be.equal(3)
+                should(sessionStarted.callCount).be.equal(1)
+
+                should(sessionFinished.callCount).be.equal(1)
+
+                should(setStarted.callCount).be.equal(2)
+
+                should(setFinished.callCount).be.equal(2)
+
+                should(phaseStarted.callCount).be.equal(4)
+
+                should(phaseFinished.callCount).be.equal(4)
+
+                should(phaseTwo.callCount).be.equal(1)
+
+                should(phaseFour.callCount).be.equal(1)
+
+                should(timer.props.session.elapsed).be.equal(7)
 
                 done()
             })
@@ -179,16 +233,14 @@ describe('Timer', () => {
 
                 setTimeout(() => {
                     timer.start()
-                }, 500)
-            }, 500)
+                }, 520)
+            }, 1020)
 
             setTimeout(() => {
                 timer.skip()
-            }, 1750)
+            }, 2750)
         })
     })
 
-    describe('fixed config', () => {
-        // todo add timer expectations / assertions
-    })
+    // todo - skip false handling
 })

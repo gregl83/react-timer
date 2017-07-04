@@ -201,7 +201,7 @@ describe('Config', () => {
 
             let config = new Config(raw)
 
-            let phase = config.phases[0]
+            let phase = config.phases[0][0]
 
             should(phase.set).be.equal(0)
             should(phase.name).be.equal(raw.sets[0].phases[0].name)
@@ -240,7 +240,7 @@ describe('Config', () => {
 
             let config = new Config(raw)
 
-            let events = config.phases[0].events
+            let events = config.phases[0][0].events
 
             should(events[-10]).not.be.undefined()
             should(events[-10].constructor.name).be.equal('Array')
@@ -291,7 +291,7 @@ describe('Config', () => {
 
             let config = new Config(raw)
 
-            let eventsOne = config.phases[0].events
+            let eventsOne = config.phases[0][0].events
 
             should(eventsOne[10]).not.be.undefined()
             should(eventsOne[10].constructor.name).be.equal('Array')
@@ -301,7 +301,7 @@ describe('Config', () => {
             should(eventsOne[10][0].meta.phase).be.equal(0)
             should(eventsOne[10][0].data.attributes).be.deepEqual(raw.sets[0].phases[0].events[0])
 
-            let eventsTwo = config.phases[1].events
+            let eventsTwo = config.phases[0][1].events
 
             should(eventsTwo[-10]).not.be.undefined()
             should(eventsTwo[-10].constructor.name).be.equal('Array')
@@ -362,7 +362,7 @@ describe('Config', () => {
         should(setEvents[30][0].meta.phase).be.undefined()
         should(setEvents[30][0].data.attributes).be.deepEqual(raw.sets[0].events[0])
 
-        let phaseEvents = config.phases[0].events
+        let phaseEvents = config.phases[0][0].events
 
         should(phaseEvents[10]).not.be.undefined()
         should(phaseEvents[10].constructor.name).be.equal('Array')

@@ -107,6 +107,8 @@ export default class Config {
         let phases = []
 
         for (const [setIndex, set] of config.sets.entries()) {
+            phases[setIndex] = []
+
             for (const [phaseIndex, phase] of set.phases.entries()) {
                 let meta = new EventMeta(setIndex, phaseIndex)
                 let events = Config.createEventsIndex(phase.duration, meta, phase.events)
@@ -114,7 +116,7 @@ export default class Config {
                 Config.addEventToIndex(meta, {name: 'phase.started', time: 0}, events)
                 Config.addEventToIndex(meta, {name: 'phase.finished', time: phase.duration}, events)
 
-                phases.push(new Phase(setIndex, phase.name, phase.duration, phase.skip, events))
+                phases[setIndex].push(new Phase(setIndex, phase.name, phase.duration, phase.skip, events))
             }
         }
 
@@ -140,14 +142,19 @@ export default class Config {
 
         index[key].push(new Event(meta, event.name, event.time))
     }
-    getEvents (session, set, phase) {
+    getPhase (set, phase) {
+        return this.phases[set.index][phase.index]
+    }
+    getEvents (session, set, phase, excludeSession, excludeSet, excludePhase) {
         let events = []
 
-        events = events.concat(this.session.fetch(session))
+        if (!excludeSession) events = events.concat(this.session.fetch(session))
 
-        if (this.sets.length) events = events.concat(this.sets[set.index].fetch(set))
+        if (!excludeSet && this.sets.length) events = events.concat(this.sets[set.index].fetch(set))
 
-        if (this.phases.length) events = events.concat(this.phases[phase.index].fetch(phase))
+        if (!excludePhase && this.phases[set.index][phase.index]) {
+            events = events.concat(this.phases[set.index][phase.index].fetch(phase))
+        }
 
         return events
     }

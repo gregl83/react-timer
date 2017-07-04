@@ -68,36 +68,41 @@ export default class Timer extends EventEmitter {
         let events = this.config.getEvents(this.props.session, this.props.set, this.props.phase)
 
         let sessionFinished = false
+        let setFinished = false
         let phaseFinished = false
+
         for (const event of events) {
             let eventName = event.data.attributes.name
 
-            if (eventName === 'session.finished') {
-                setTimeout(() => this.stop(), 0)
-                sessionFinished = true
-            }
-
-            if (eventName === 'set.finished') {
-                this.props.set = {
-                    index: event.meta.set + 1,
-                    elapsed: 0,
-                    offset: 0
-                }
-            }
-
-            if (eventName === 'phase.finished') {
-                this.props.phase = {
-                    index: event.meta.phase + 1,
-                    elapsed: 0,
-                    offset: 0
-                }
-                phaseFinished = true
-            }
+            if (eventName === 'session.finished') sessionFinished = true
+            if (eventName === 'set.finished') setFinished = true
+            if (eventName === 'phase.finished') phaseFinished = true
 
             this.emit(eventName, event)
         }
 
-        if (!sessionFinished && phaseFinished) this.emitEvents()
+        if (sessionFinished) return setTimeout(() => this.stop(), 0)
+
+        if (setFinished) {
+            this.props.set.index++
+            this.props.set.elapsed = 0
+            this.props.set.offset = 0
+
+            this.props.phase.index = 0
+            this.props.phase.elapsed = 0
+            this.props.phase.offset = 0
+        } else if (phaseFinished) {
+            this.props.phase.index++
+            this.props.phase.elapsed = 0
+            this.props.phase.offset = 0
+        }
+
+        events = this.config.getEvents(null, this.props.set, this.props.phase, true, !setFinished, !phaseFinished)
+
+        for (const event of events) {
+            let eventName = event.data.attributes.name
+            this.emit(eventName, event)
+        }
     }
     tick () {
         this.props.session.elapsed++
@@ -124,7 +129,7 @@ export default class Timer extends EventEmitter {
     }
     skip () {
         if (this.is(Timer.states.STARTED) && !this.is(Timer.states.STOPPED)) {
-            let phase = this.config.phases[this.props.phase.index]
+            let phase = this.config.getPhase(this.props.set, this.props.phase)
             let offset = phase.duration - this.props.phase.elapsed
             this.props.session.offset += offset
             this.props.set.offset += offset
