@@ -11,21 +11,23 @@ export default class Timer extends EventEmitter {
         this.interval = new Interval
         this.interval.addListener('tick', () => this.tick())
 
+        this.init()
+    }
+    init () {
+        this.config.init()
+
         this.props = {
             session: {
                 started: null,
                 elapsed: 0,
-                offset: 0
             },
             set: {
                 index: 0,
                 elapsed: 0,
-                offset: 0
             },
             phase: {
                 index: 0,
                 elapsed: 0,
-                offset: 0
             },
             state: null
         }
@@ -97,7 +99,11 @@ export default class Timer extends EventEmitter {
             this.props.phase.offset = 0
         }
 
-        events = this.config.getEvents(null, this.props.set, this.props.phase, true, !setFinished, !phaseFinished)
+        events = this.config.getEvents(
+            null,
+            setFinished ? this.props.set : null,
+            phaseFinished ? this.props.phase : null
+        )
 
         for (const event of events) {
             let eventName = event.data.attributes.name
@@ -130,12 +136,15 @@ export default class Timer extends EventEmitter {
     skip () {
         if (this.is(Timer.states.STARTED) && !this.is(Timer.states.STOPPED)) {
             let phase = this.config.getPhase(this.props.set, this.props.phase)
-            let offset = phase.duration - this.props.phase.elapsed
-            this.props.session.offset += offset
-            this.props.set.offset += offset
-            this.props.phase.offset += offset
+            let adjustment = this.props.phase.elapsed - phase.duration
+            let nextPhaseIndex = this.props.phase.index + 1
+            let nextPhase = this.config.phases[nextPhaseIndex]
+            if (nextPhase) {
+                this.config.adjustPhase(nextPhase.set, nextPhaseIndex, adjustment)
+            }
+            this.props.phase.elapsed = phase.duration
             this.emit('skipped')
-            this.emitEvents(offset)
+            this.emitEvents()
         }
     }
     stop () {
@@ -148,9 +157,7 @@ export default class Timer extends EventEmitter {
     reset () {
         if (this.is(Timer.states.STARTED)) {
             this.stop()
-            this.props.session.started = null
-            this.props.session.elapsed = 0
-            this.state = Timer.states.READY
+            this.init()
             this.emit('reset')
         }
     }

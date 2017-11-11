@@ -1,70 +1,18 @@
-class EventsIndex {
-    constructor (duration, events) {
-        this.duration = duration
-        this.events = events
-    }
-    fetch (index) {
-        let events = []
-
-        let elapsed = index.elapsed + index.offset
-
-        let fromStart = elapsed
-        if (Array.isArray(this.events[fromStart])) events = events.concat(this.events[fromStart])
-
-        let fromEnd = (this.duration - elapsed) * -1
-        if (fromEnd && Array.isArray(this.events[fromEnd])) events = events.concat(this.events[fromEnd])
-
-        return events
-    }
-}
-
-class EventMeta {
-    constructor (set, phase) {
-        this.set = set
-        if (Number.isInteger(phase)) this.phase = phase
-    }
-}
-
-class Event {
-    constructor (meta, name, time) {
-        if (meta) this.meta = meta
-        this.data = {
-            attributes: {
-                name,
-                time
-            }
-        }
-    }
-}
-
-class Session extends EventsIndex {
-    constructor (name, fixed, duration, events) {
-        super(duration, events)
-        this.name = name
-        this.fixed = fixed
-    }
-}
-
-class Set extends EventsIndex {
-    constructor (duration, events) {
-        super(duration, events)
-    }
-}
-
-class Phase extends EventsIndex {
-    constructor (set, name, duration, skip, events) {
-        super(duration, events)
-        this.set = set
-        this.name = name
-        this.skip = skip
-    }
-}
+import Event from './event/Event'
+import EventMeta from './event/Meta'
+import EventIndex from './event/Index'
+import Session from './scopes/Session'
+import Set from './scopes/Set'
+import Phase from './scopes/Phase'
 
 export default class Config {
     constructor (config) {
-        this.session = Config.createSession(config)
-        this.sets = Config.createSets(config)
-        this.phases = Config.createPhases(config)
+        this.unparsed = config
+    }
+    init () {
+        this.session = Config.createSession(this.unparsed)
+        this.sets = Config.createSets(this.unparsed)
+        this.phases = Config.createPhases(this.unparsed)
     }
     static createSession (config) {
         let sessionDuration = 0
@@ -75,12 +23,9 @@ export default class Config {
             }
         }
 
-        let events = Config.createEventsIndex(sessionDuration, null, config.events)
+        let events = Config.createEventsIndex('session', sessionDuration, null, config.events)
 
-        Config.addEventToIndex(null, {name: 'session.started', time: 0}, events)
-        Config.addEventToIndex(null, {name: 'session.finished', time: sessionDuration}, events)
-
-        return new Session(config.name, config.fixed, sessionDuration, events)
+        return new Session(config.name, config.type, sessionDuration, events)
     }
     static createSets (config) {
         let sets = []
@@ -93,10 +38,7 @@ export default class Config {
             }
 
             let meta = new EventMeta(setIndex)
-            let events = Config.createEventsIndex(setDuration, meta, set.events)
-
-            Config.addEventToIndex(meta, {name: 'set.started', time: 0}, events)
-            Config.addEventToIndex(meta, {name: 'set.finished', time: setDuration}, events)
+            let events = Config.createEventsIndex('set', setDuration, meta, set.events)
 
             sets.push(new Set(setDuration, events))
         }
@@ -111,10 +53,7 @@ export default class Config {
 
             for (const [phaseIndex, phase] of set.phases.entries()) {
                 let meta = new EventMeta(setIndex, phaseIndex)
-                let events = Config.createEventsIndex(phase.duration, meta, phase.events)
-
-                Config.addEventToIndex(meta, {name: 'phase.started', time: 0}, events)
-                Config.addEventToIndex(meta, {name: 'phase.finished', time: phase.duration}, events)
+                let events = Config.createEventsIndex('phase', phase.duration, meta, phase.events)
 
                 phases[setIndex].push(new Phase(setIndex, phase.name, phase.duration, phase.skip, events))
             }
@@ -122,38 +61,62 @@ export default class Config {
 
         return phases
     }
-    static createEventsIndex (duration, meta, events) {
-        let index = {}
+    static createEventsIndex (scope, duration, meta, events) {
+        let index = new EventIndex
 
-        if (!events) return index
+        index.add(new Event(meta, `${scope}.started`, 0))
+        if (events) {
+            for (const event of events) {
+                let eventTime = event.time < 0 ? duration + event.time : event.time
 
-        for (const event of events) {
-            if (Math.abs(event.time) > duration) throw new Error('event time must be within interval duration')
+                if (eventTime > duration) throw new Error(`event time must be within ${scope} duration`)
 
-            Config.addEventToIndex(meta, event, index)
+                index.add(new Event(meta, event.name, eventTime))
+            }
         }
+        index.add(new Event(meta, `${scope}.finished`, duration))
 
         return index
-    }
-    static addEventToIndex (meta, event, index) {
-        let key = event.time
-
-        if (!Array.isArray(index[key])) index[key] = []
-
-        index[key].push(new Event(meta, event.name, event.time))
     }
     getPhase (set, phase) {
         return this.phases[set.index][phase.index]
     }
-    getEvents (session, set, phase, excludeSession, excludeSet, excludePhase) {
+    adjustPhase (set, phase, adjustment) {
+        this.phases[set.index][phase.index].duration += adjustment
+        this.phases[set.index][phase.index].events = Config.createEventsIndex(
+            'phase',
+            this.phases[set.index][phase.index].duration,
+            new EventMeta(set.index, phase.index),
+            this.unparsed.sets[set.index].phases[phase.index].events
+        )
+
+        this.sets[set.index].duration += adjustment
+        this.sets[set.index].events = Config.createEventsIndex(
+            'set',
+            this.sets[set.index].duration,
+            new EventMeta(set.index),
+            this.unparsed.sets[set.index].events
+        )
+
+        this.session.duration += adjustment
+        this.session.events = Config.createEventsIndex(
+            'session',
+            this.session.duration,
+            null,
+            this.unparsed.events
+        )
+    }
+    getEvents (session, set, phase) {
         let events = []
 
-        if (!excludeSession) events = events.concat(this.session.fetch(session))
+        if (session) events = events.concat(this.session.getEvents(session))
 
-        if (!excludeSet && this.sets.length) events = events.concat(this.sets[set.index].fetch(set))
+        if (set && this.sets.length) {
+            events = events.concat(this.sets[set.index].getEvents(set))
 
-        if (!excludePhase && this.phases[set.index][phase.index]) {
-            events = events.concat(this.phases[set.index][phase.index].fetch(phase))
+            if (phase && this.phases[set.index][phase.index]) {
+                events = events.concat(this.phases[set.index][phase.index].getEvents(phase))
+            }
         }
 
         return events

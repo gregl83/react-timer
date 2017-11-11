@@ -1,6 +1,6 @@
 {
   "name": "session",
-  "fixed": false,
+  "type": "dynamic",
   "sets": [
     {
       "phases": [

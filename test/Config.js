@@ -1,36 +1,67 @@
-import Config from "../src/Config"
-import sinon from "sinon"
 import should from "should"
+import Config from "../src/Config"
+import EventIndex from "../src/event/Index"
+import Session from "../src/scopes/Session"
+import Set from "../src/scopes/Set"
+import Phase from "../src/scopes/Phase"
+
+function assertScopes(config) {
+    should(config.session).be.instanceOf(Session)
+    should(config.session.events).be.instanceOf(EventIndex)
+
+    should(config.sets).be.instanceOf(Array)
+    should(config.sets).be.length(0)
+
+    should(config.phases).be.instanceOf(Array)
+    should(config.phases).be.length(0)
+}
+
+function assertStartEndEvents(scope, duration, index) {
+    should(index[0]).be.instanceOf(Array)
+    should(index[0]).be.length(1)
+    should(index[0][0].data.attributes.name).be.equal(`${scope}.started`)
+
+    should(index[duration]).be.instanceOf(Array)
+    should(index[duration]).be.length(1)
+    should(index[duration][0].data.attributes.name).be.equal(`${scope}.finished`)
+}
 
 describe('Config', () => {
-    describe('session', () => {
-        it('base properties', done => {
-            let raw = {
-                name: 'test',
-                fixed: true,
-                sets: [],
-                events: []
-            }
+    describe('init', () => {
+        let raw = {
+            name: 'test',
+            type: 'constant',
+            sets: [],
+            events: []
+        }
 
-            let config = new Config(raw)
+        let config = new Config(raw)
 
-            let session = config.session
+        config.init()
 
-            should(session.name).be.equal(raw.name)
-            should(session.fixed).be.true()
-            should(session.duration).be.equal(0)
-            should(session.events[0].constructor.name).be.equal('Array')
-            should(session.events[0]).be.length(2)
-
-            // todo - more robust standard event tests
-
+        it('builds scopes', done => {
+            assertScopes(config)
             done()
         })
 
-        it('events from start and end', done => {
+        it('rebuilds scopes', done => {
+            config.session = null
+            config.sets = null
+            config.phases = null
+
+            config.init()
+
+            assertScopes(config)
+
+            done()
+        })
+    })
+
+    describe('scopes', () => {
+        describe('session', () => {
             let raw = {
-                name: 'start-end-session',
-                fixed: false,
+                name: 'session',
+                type: 'dynamic',
                 sets: [
                     {phases: [{name: 'one', duration: 60, skip: false}]}
                 ],
@@ -41,97 +72,42 @@ describe('Config', () => {
             };
 
             let config = new Config(raw)
+            config.init()
 
-            let events = config.session.events
+            it('sets properties', done => {
+                let session = config.session
 
-            should(events[-10]).not.be.undefined()
-            should(events[-10].constructor.name).be.equal('Array')
-            should(events[-10]).be.length(1)
+                should(session.name).be.equal(raw.name)
+                should(session.type).be.equal(raw.type)
+                should(session.duration).be.equal(60)
+                should(session.events).be.instanceOf(EventIndex)
 
-            should(events[-10][0].meta).be.undefined()
-            should(events[-10][0].data.attributes).be.deepEqual(raw.events[0])
+                done()
+            })
 
-            should(events[10]).not.be.undefined()
-            should(events[10].constructor.name).be.equal('Array')
-            should(events[10]).be.length(1)
+            it('indexes events', done => {
+                let index = config.session.events.index
 
-            should(events[10][0].meta).be.undefined()
-            should(events[10][0].data.attributes).be.deepEqual(raw.events[1])
+                assertStartEndEvents('session', 60, index)
 
-            done()
-        })
-    })
+                should(index[10]).be.instanceOf(Array)
+                should(index[10]).be.length(1)
+                should(index[10][0].meta).be.undefined()
+                should(index[10][0].data.attributes.name).be.deepEqual(raw.events[1].name)
 
-    describe('sets', () => {
-        it('base properties', done => {
-            let raw = {
-                name: 'test',
-                fixed: false,
-                sets: [
-                    {
-                        phases: [{name: 'one', duration: 60, skip: false}],
-                        events: []
-                    }
-                ]
-            }
+                should(index[50]).be.instanceOf(Array)
+                should(index[50]).be.length(1)
+                should(index[50][0].meta).be.undefined()
+                should(index[50][0].data.attributes.name).be.deepEqual(raw.events[0].name)
 
-            let config = new Config(raw)
-
-            let set = config.sets[0]
-
-            should(set.duration).be.equal(raw.sets[0].phases[0].duration)
-            should(set.events[0].constructor.name).be.equal('Array')
-            should(set.events[0]).be.length(1)
-            should(set.events[60].constructor.name).be.equal('Array')
-            should(set.events[60]).be.length(1)
-
-            // todo - more robust standard event tests
-
-            done()
+                done()
+            })
         })
 
-        it('events from start and end', done => {
+        describe('sets', () => {
             let raw = {
-                name: 'start-end-set',
-                fixed: false,
-                sets: [
-                    {
-                        phases: [{name: 'one', duration: 60, skip: false}],
-                        events: [
-                            {name: 'alpha', time: -10},
-                            {name: 'bravo', time: 10}
-                        ]
-                    }
-                ]
-            }
-
-            let config = new Config(raw)
-
-            let events = config.sets[0].events
-
-            should(events[-10]).not.be.undefined()
-            should(events[-10].constructor.name).be.equal('Array')
-            should(events[-10]).be.length(1)
-
-            should(events[-10][0].meta.set).be.equal(0)
-            should(events[-10][0].meta.phase).be.undefined()
-            should(events[-10][0].data.attributes).be.deepEqual(raw.sets[0].events[0])
-
-            should(events[10]).not.be.undefined()
-            should(events[10].constructor.name).be.equal('Array')
-            should(events[10]).be.length(1)
-
-            should(events[10][0].meta.set).be.equal(0)
-            should(events[10][0].meta.phase).be.undefined()
-            should(events[10][0].data.attributes).be.deepEqual(raw.sets[0].events[1])
-
-            done()
-        })
-
-        it('events in multiple sets', done => {
-            let raw = {
-                name: 'multi-set',
-                fixed: false,
+                name: 'sets',
+                type: 'dynamic',
                 sets: [
                     {
                         phases: [
@@ -161,110 +137,51 @@ describe('Config', () => {
             }
 
             let config = new Config(raw)
+            config.init()
 
-            let eventsOne = config.sets[0].events
+            it('sets properties', done => {
+                let sets = config.sets
 
-            should(eventsOne[10]).not.be.undefined()
-            should(eventsOne[10].constructor.name).be.equal('Array')
-            should(eventsOne[10]).be.length(1)
+                should(sets[0]).be.instanceOf(Set)
+                should(sets[0].duration).be.equal(20)
+                should(sets[0].events).be.instanceOf(EventIndex)
 
-            should(eventsOne[10][0].meta.set).be.equal(0)
-            should(eventsOne[10][0].meta.phase).be.undefined()
-            should(eventsOne[10][0].data.attributes).be.deepEqual(raw.sets[0].events[0])
+                should(sets[1]).be.instanceOf(Set)
+                should(sets[1].duration).be.equal(40)
+                should(sets[1].events).be.instanceOf(EventIndex)
 
-            let eventsTwo = config.sets[1].events
+                done()
+            })
 
-            should(eventsTwo[-10]).not.be.undefined()
-            should(eventsTwo[-10].constructor.name).be.equal('Array')
-            should(eventsTwo[-10]).be.length(1)
+            it('indexes events', done => {
+                let indexOne = config.sets[0].events.index
 
-            should(eventsTwo[-10][0].meta.set).be.equal(1)
-            should(eventsTwo[-10][0].meta.phase).be.undefined()
-            should(eventsTwo[-10][0].data.attributes).be.deepEqual(raw.sets[1].events[0])
+                assertStartEndEvents('set', 20, indexOne)
 
-            done()
-        })
-    })
+                should(indexOne[10]).be.instanceOf(Array)
+                should(indexOne[10]).be.length(1)
+                should(indexOne[10][0].meta.set).be.equal(0)
+                should(indexOne[10][0].meta.phase).be.undefined()
+                should(indexOne[10][0].data.attributes.name).be.deepEqual(raw.sets[0].events[0].name)
 
-    describe('phases', () => {
-        it('base properties', done => {
-            let raw = {
-                name: 'test',
-                fixed: false,
-                sets: [
-                    {
-                        phases: [{name: 'one', duration: 60, skip: false}],
-                        events: []
-                    }
-                ]
-            }
+                let indexTwo = config.sets[1].events.index
 
-            let config = new Config(raw)
+                assertStartEndEvents('set', 40, indexTwo)
 
-            let phase = config.phases[0][0]
+                should(indexTwo[30]).be.instanceOf(Array)
+                should(indexTwo[30]).be.length(1)
+                should(indexTwo[30][0].meta.set).be.equal(1)
+                should(indexTwo[30][0].meta.phase).be.undefined()
+                should(indexTwo[30][0].data.attributes.name).be.deepEqual(raw.sets[1].events[0].name)
 
-            should(phase.set).be.equal(0)
-            should(phase.name).be.equal(raw.sets[0].phases[0].name)
-            should(phase.duration).be.equal(raw.sets[0].phases[0].duration)
-            should(phase.skip).be.equal(raw.sets[0].phases[0].skip)
-            should(phase.events[0].constructor.name).be.equal('Array')
-            should(phase.events[0]).be.length(1)
-            should(phase.events[60].constructor.name).be.equal('Array')
-            should(phase.events[60]).be.length(1)
-
-            // todo - more robust standard event tests
-
-            done()
+                done()
+            })
         })
 
-        it('events from start and end', done => {
+        describe('phases', () => {
             let raw = {
-                name: 'start-end-phase',
-                fixed: false,
-                sets: [
-                    {
-                        phases: [
-                            {
-                                name: 'one',
-                                duration: 60,
-                                skip: false,
-                                events: [
-                                    {name: 'alpha', time: -10},
-                                    {name: 'bravo', time: 10}
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-
-            let config = new Config(raw)
-
-            let events = config.phases[0][0].events
-
-            should(events[-10]).not.be.undefined()
-            should(events[-10].constructor.name).be.equal('Array')
-            should(events[-10]).be.length(1)
-
-            should(events[-10][0].meta.set).be.equal(0)
-            should(events[-10][0].meta.phase).be.equal(0)
-            should(events[-10][0].data.attributes).be.deepEqual(raw.sets[0].phases[0].events[0])
-
-            should(events[10]).not.be.undefined()
-            should(events[10].constructor.name).be.equal('Array')
-            should(events[10]).be.length(1)
-
-            should(events[10][0].meta.set).be.equal(0)
-            should(events[10][0].meta.phase).be.equal(0)
-            should(events[10][0].data.attributes).be.deepEqual(raw.sets[0].phases[0].events[1])
-
-            done()
-        })
-
-        it('events in multiple phases', done => {
-            let raw = {
-                name: 'multi-phase',
-                fixed: false,
+                name: 'phases',
+                type: 'dynamic',
                 sets: [
                     {
                         phases: [
@@ -290,88 +207,264 @@ describe('Config', () => {
             }
 
             let config = new Config(raw)
+            config.init()
 
-            let eventsOne = config.phases[0][0].events
+            it('sets properties', done => {
+                let phases = config.phases[0]
 
-            should(eventsOne[10]).not.be.undefined()
-            should(eventsOne[10].constructor.name).be.equal('Array')
-            should(eventsOne[10]).be.length(1)
+                should(phases[0]).be.instanceOf(Phase)
+                should(phases[0].duration).be.equal(20)
+                should(phases[0].events).be.instanceOf(EventIndex)
 
-            should(eventsOne[10][0].meta.set).be.equal(0)
-            should(eventsOne[10][0].meta.phase).be.equal(0)
-            should(eventsOne[10][0].data.attributes).be.deepEqual(raw.sets[0].phases[0].events[0])
+                should(phases[1]).be.instanceOf(Phase)
+                should(phases[1].duration).be.equal(40)
+                should(phases[1].events).be.instanceOf(EventIndex)
 
-            let eventsTwo = config.phases[0][1].events
+                done()
+            })
 
-            should(eventsTwo[-10]).not.be.undefined()
-            should(eventsTwo[-10].constructor.name).be.equal('Array')
-            should(eventsTwo[-10]).be.length(1)
+            it('indexes events', done => {
+                let indexOne = config.phases[0][0].events.index
 
-            should(eventsTwo[-10][0].meta.set).be.equal(0)
-            should(eventsTwo[-10][0].meta.phase).be.equal(1)
-            should(eventsTwo[-10][0].data.attributes).be.deepEqual(raw.sets[0].phases[1].events[0])
+                should(indexOne[10]).be.instanceOf(Array)
+                should(indexOne[10]).be.length(1)
+                should(indexOne[10][0].meta.set).be.equal(0)
+                should(indexOne[10][0].meta.phase).be.equal(0)
+                should(indexOne[10][0].data.attributes.name).be.deepEqual(raw.sets[0].phases[0].events[0].name)
+
+                let indexTwo = config.phases[0][1].events.index
+
+                should(indexTwo[30]).be.instanceOf(Array)
+                should(indexTwo[30]).be.length(1)
+                should(indexTwo[30][0].meta.set).be.equal(0)
+                should(indexTwo[30][0].meta.phase).be.equal(1)
+                should(indexTwo[30][0].data.attributes.name).be.deepEqual(raw.sets[0].phases[1].events[0].name)
+
+                done()
+            })
+        })
+    })
+
+    describe('getPhase', () => {
+        let raw = {
+            name: 'phases',
+            type: 'dynamic',
+            sets: [
+                {
+                    phases: [{name: 'one', duration: 20}]
+                }
+            ]
+        }
+
+        let config = new Config(raw)
+        config.init()
+
+        it('gets a phase', done => {
+            should(config.phases[0][0]).be.deepEqual(
+                config.getPhase({index: 0}, {index: 0})
+            )
 
             done()
         })
     })
 
-    it('events in every scope', done => {
+    describe('adjustPhase', () => {
         let raw = {
-            name: 'every-scope',
-            fixed: false,
+            name: 'phases',
+            type: 'dynamic',
+            sets: [
+                {
+                    phases: [
+                        {name: 'one', duration: 20},
+                        {name: 'two', duration: 20},
+                    ]
+                },
+                {
+                    phases: [
+                        {name: 'three', duration: 20}
+                    ]
+                }
+            ]
+        }
+
+        let config = new Config(raw)
+        config.init()
+
+        config.adjustPhase({index: 0}, {index: 0}, 10)
+
+        describe('session', () => {
+            it('adjusts duration', done => {
+                should(config.session.duration).be.equal(70)
+                done()
+            })
+
+            it('re-indexes events', done => {
+                let index = config.session.events.index
+
+                assertStartEndEvents('session', 70, index)
+
+                done()
+            })
+        })
+
+        describe('set', () => {
+            it('adjusts duration', done => {
+                should(config.sets[0].duration).be.equal(50)
+                done()
+            })
+
+            it('re-indexes events', done => {
+                let indexOne = config.sets[0].events.index
+
+                assertStartEndEvents('set', 50, indexOne)
+
+                let indexTwo = config.sets[1].events.index
+
+                assertStartEndEvents('set', 20, indexTwo)
+
+                done()
+            })
+        })
+
+        describe('phase', () => {
+            it('adjusts duration', done => {
+                should(config.phases[0][0].duration).be.equal(30)
+                done()
+            })
+
+            it('re-indexes events', done => {
+                let indexOne = config.phases[0][0].events.index
+
+                assertStartEndEvents('phase', 30, indexOne)
+
+                let indexTwo = config.phases[0][1].events.index
+
+                assertStartEndEvents('phase', 20, indexTwo)
+
+                let indexThree = config.phases[1][0].events.index
+
+                assertStartEndEvents('phase', 20, indexThree)
+
+                done()
+            })
+        })
+    })
+
+    describe('getEvents', () => {
+        let raw = {
+            name: 'events',
+            type: 'dynamic',
             sets: [
                 {
                     phases: [
                         {
                             name: 'one',
-                            duration: 60,
+                            duration: 20,
                             skip: false,
                             events: [
                                 {name: 'alpha', time: 10}
                             ]
+                        },
+                        {
+                            name: 'two',
+                            duration: 20,
+                            skip: false,
+                            events: [
+                                {name: 'bravo', time: -10}
+                            ]
                         }
                     ],
                     events: [
-                        {name: 'bravo', time: 30}
+                        {name: 'charlie', time: -10}
+                    ]
+                },
+                {
+                    phases: [
+                        {
+                            name: "three",
+                            duration: 20,
+                            skip: false,
+                            events: [
+                                {name: 'delta', time: 20}
+                            ]
+                        }
+                    ],
+                    events: [
+                        {name: 'echo', time: 20}
                     ]
                 }
             ],
             events: [
-                {name: 'charlie', time: -10}
+                {name: 'foxtrot', time: 10}
             ]
         }
 
         let config = new Config(raw)
+        config.init()
 
-        let sessionEvents = config.session.events
+        it('gets all events for 0 seconds elapsed', done => {
+            let events = config.getEvents(
+                {elapsed: 0},
+                {index: 0, elapsed: 0},
+                {index: 0, elapsed: 0},
+            )
 
-        should(sessionEvents[-10]).not.be.undefined()
-        should(sessionEvents[-10].constructor.name).be.equal('Array')
-        should(sessionEvents[-10]).be.length(1)
+            should(events).be.instanceOf(Array)
+            should(events).be.length(3)
 
-        should(sessionEvents[-10][0].meta).be.undefined()
-        should(sessionEvents[-10][0].data.attributes).be.deepEqual(raw.events[0])
+            done()
+        })
 
-        let setEvents = config.sets[0].events
+        it('gets all events for 10 seconds elapsed', done => {
+            let events = config.getEvents(
+                {elapsed: 10},
+                {index: 0, elapsed: 10},
+                {index: 0, elapsed: 10},
+            )
 
-        should(setEvents[30]).not.be.undefined()
-        should(setEvents[30].constructor.name).be.equal('Array')
-        should(setEvents[30]).be.length(1)
+            should(events).be.instanceOf(Array)
+            should(events).be.length(2)
 
-        should(setEvents[30][0].meta.set).be.equal(0)
-        should(setEvents[30][0].meta.phase).be.undefined()
-        should(setEvents[30][0].data.attributes).be.deepEqual(raw.sets[0].events[0])
+            done()
+        })
 
-        let phaseEvents = config.phases[0][0].events
+        it('gets all events for 30 seconds elapsed', done => {
+            let events = config.getEvents(
+                {elapsed: 30},
+                {index: 0, elapsed: 30},
+                {index: 1, elapsed: 10},
+            )
 
-        should(phaseEvents[10]).not.be.undefined()
-        should(phaseEvents[10].constructor.name).be.equal('Array')
-        should(phaseEvents[10]).be.length(1)
+            should(events).be.instanceOf(Array)
+            should(events).be.length(2)
 
-        should(phaseEvents[10][0].meta.set).be.equal(0)
-        should(phaseEvents[10][0].meta.phase).be.equal(0)
-        should(phaseEvents[10][0].data.attributes).be.deepEqual(raw.sets[0].phases[0].events[0])
+            done()
+        })
 
-        done()
+        it('gets all events for 40 seconds elapsed', done => {
+            let events = config.getEvents(
+                {elapsed: 40},
+                {index: 0, elapsed: 40},
+                {index: 1, elapsed: 20},
+            )
+
+            should(events).be.instanceOf(Array)
+            should(events).be.length(2)
+
+            done()
+        })
+
+        it('gets all events for 60 seconds elapsed', done => {
+            let events = config.getEvents(
+                {elapsed: 60},
+                {index: 1, elapsed: 20},
+                {index: 0, elapsed: 20},
+            )
+
+            should(events).be.instanceOf(Array)
+            should(events).be.length(5)
+
+            done()
+        })
     })
 })
