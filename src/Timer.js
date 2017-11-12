@@ -125,7 +125,7 @@ export default class Timer extends EventEmitter {
     }
     start () {
         if (this.is(Timer.states.READY) && !this.is(Timer.states.STOPPED)) {
-            this.props.session.started = Date.now()
+            if (!this.props.session.started) this.props.session.started = Date.now()
             this.interval.start()
             this.state = Timer.states.STARTED
             this.emitEvent('started')

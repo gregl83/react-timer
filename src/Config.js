@@ -69,9 +69,7 @@ export default class Config {
             for (const event of events) {
                 let eventTime = event.time < 0 ? duration + event.time : event.time
 
-                if (eventTime > duration) throw new Error(`event time must be within ${scope} duration`)
-
-                index.add(new Event(meta, event.name, eventTime))
+                if (eventTime <= duration) index.add(new Event(meta, event.name, eventTime))
             }
         }
         index.add(new Event(meta, `${scope}.finished`, duration))
