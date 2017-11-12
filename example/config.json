@@ -1,13 +1,13 @@
 {
   "name": "session",
-  "type": "dynamic",
+  "type": "constant",
   "sets": [
     {
       "phases": [
         {
           "name": "alpha",
           "duration": 60,
-          "skip": false,
+          "skip": true,
           "events": [
             {
               "name": "alpha-reminder",
@@ -18,7 +18,7 @@
         {
           "name": "bravo",
           "duration": 120,
-          "skip": true,
+          "skip": false,
           "events": [
             {
               "name": "bravo-reminder",

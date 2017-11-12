@@ -106,17 +106,17 @@ export default class Config {
             this.unparsed.events
         )
     }
-    getEvents (session, set, phase) {
+    getEvents (session, set, phase, excludes) {
+        if (!excludes) excludes = []
+
         let events = []
 
-        if (session) events = events.concat(this.session.getEvents(session))
+        if (!excludes.includes('session')) events = events.concat(this.session.getEvents(session))
 
-        if (set && this.sets.length) {
-            events = events.concat(this.sets[set.index].getEvents(set))
+        if (!excludes.includes('set')) events = events.concat(this.sets[set.index].getEvents(set))
 
-            if (phase && this.phases[set.index][phase.index]) {
-                events = events.concat(this.phases[set.index][phase.index].getEvents(phase))
-            }
+        if (!excludes.includes('phase') && this.phases[set.index][phase.index]) {
+            events = events.concat(this.phases[set.index][phase.index].getEvents(phase))
         }
 
         return events

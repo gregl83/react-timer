@@ -1,6 +1,8 @@
 import { EventEmitter } from "fbemitter"
 import Config from "./Config"
 import Interval from "./Interval"
+import Event from './event/Event'
+import EventMeta from './event/Meta'
 
 export default class Timer extends EventEmitter {
     constructor (config) {
@@ -66,6 +68,11 @@ export default class Timer extends EventEmitter {
     is (state) {
         return (this.props.state & state) === state
     }
+    emitEvent (name) {
+        let eventMeta = new EventMeta(this.props.set.index, this.props.phase.index)
+        let event = new Event(eventMeta, name, this.props.session.elapsed)
+        this.emit(name, event)
+    }
     emitEvents () {
         let events = this.config.getEvents(this.props.session, this.props.set, this.props.phase)
 
@@ -83,27 +90,26 @@ export default class Timer extends EventEmitter {
             this.emit(eventName, event)
         }
 
+        let excludeEvents = ['session', 'set', 'phase']
+
         if (sessionFinished) return setTimeout(() => this.stop(), 0)
 
         if (setFinished) {
+            excludeEvents.splice(1, 2)
+
             this.props.set.index++
             this.props.set.elapsed = 0
-            this.props.set.offset = 0
 
             this.props.phase.index = 0
             this.props.phase.elapsed = 0
-            this.props.phase.offset = 0
         } else if (phaseFinished) {
+            excludeEvents.splice(2, 1)
+
             this.props.phase.index++
             this.props.phase.elapsed = 0
-            this.props.phase.offset = 0
         }
 
-        events = this.config.getEvents(
-            null,
-            setFinished ? this.props.set : null,
-            phaseFinished ? this.props.phase : null
-        )
+        events = this.config.getEvents(this.props.session, this.props.set, this.props.phase, excludeEvents)
 
         for (const event of events) {
             let eventName = event.data.attributes.name
@@ -114,7 +120,7 @@ export default class Timer extends EventEmitter {
         this.props.session.elapsed++
         this.props.set.elapsed++
         this.props.phase.elapsed++
-        this.emit('ticked')
+        this.emitEvent('ticked')
         this.emitEvents()
     }
     start () {
@@ -122,7 +128,7 @@ export default class Timer extends EventEmitter {
             this.props.session.started = Date.now()
             this.interval.start()
             this.state = Timer.states.STARTED
-            this.emit('started')
+            this.emitEvent('started')
             this.emitEvents()
         }
     }
@@ -130,20 +136,33 @@ export default class Timer extends EventEmitter {
         if (this.is(Timer.states.STARTED) && !this.is(Timer.states.PAUSED)) {
             this.interval.pause()
             this.state = Timer.states.PAUSED
-            this.emit('paused')
+            this.emitEvent('paused')
         }
     }
     skip () {
-        if (this.is(Timer.states.STARTED) && !this.is(Timer.states.STOPPED)) {
-            let phase = this.config.getPhase(this.props.set, this.props.phase)
-            let adjustment = this.props.phase.elapsed - phase.duration
-            let nextPhaseIndex = this.props.phase.index + 1
-            let nextPhase = this.config.phases[nextPhaseIndex]
-            if (nextPhase) {
-                this.config.adjustPhase(nextPhase.set, nextPhaseIndex, adjustment)
+        let phase = this.config.getPhase(this.props.set, this.props.phase)
+
+        if (this.is(Timer.states.STARTED) && !this.is(Timer.states.STOPPED) && phase.skip) {
+            this.emitEvent('skipped')
+
+            let remainder = phase.duration - this.props.phase.elapsed
+            let adjustment = remainder * -1
+            this.config.adjustPhase(this.props.set, this.props.phase, adjustment)
+
+            if (this.config.session.type === 'constant') {
+                let setIndex = this.props.set.index
+                let phaseIndex = this.props.phase.index + 1
+
+                if (!this.config.phases[setIndex][phaseIndex]) {
+                    setIndex++
+                    phaseIndex = 0
+                }
+
+                if (this.config.phases[setIndex] && this.config.phases[setIndex][phaseIndex]) {
+                    this.config.adjustPhase({index: setIndex}, {index: phaseIndex}, remainder)
+                }
             }
-            this.props.phase.elapsed = phase.duration
-            this.emit('skipped')
+
             this.emitEvents()
         }
     }
@@ -151,14 +170,14 @@ export default class Timer extends EventEmitter {
         if (this.is(Timer.states.STARTED) && !this.is(Timer.states.STOPPED)) {
             this.interval.stop()
             this.state = Timer.states.STOPPED
-            this.emit('stopped')
+            this.emitEvent('stopped')
         }
     }
     reset () {
         if (this.is(Timer.states.STARTED)) {
             this.stop()
             this.init()
-            this.emit('reset')
+            this.emitEvent('reset')
         }
     }
 }

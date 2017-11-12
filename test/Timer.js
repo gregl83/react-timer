@@ -5,7 +5,7 @@ import should from "should"
 let config = {
     name: 'test',
     type: 'dynamic',
-    sets: [{phases: [{name: 'one', duration: 60, skip: false}]}],
+    sets: [{phases: [{name: 'one', duration: 60, skip: true}]}],
     events: []
 }
 
@@ -78,7 +78,7 @@ describe('Timer', () => {
             }, 20)
         })
 
-        it('paused event emitted', done => {
+        it('skipped event emitted', done => {
             let timer = new Timer(config)
 
             let skip = sinon.spy()

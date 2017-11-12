@@ -3,54 +3,53 @@ import config from "./config"
 
 let timer = new Timer(config)
 
+function logEvent(event) {
+    console.log(event.data.attributes.name)
+    console.log(JSON.stringify(timer.props), "\r\n")
+}
+
 // timer events - utilizes timer ui
-timer.addListener('ticked', () => console.log('ticked', timer.props))
+timer.addListener('ticked', logEvent)
 
-timer.addListener('started', () => {
-    console.log('started', timer.props)
-
+timer.addListener('started', event => {
+    logEvent(event)
     if (!timer.props.session.elapsed) setTimeout(() => timer.pause(), 3000)
     else setTimeout(() => timer.skip(), 3000)
 })
 
-timer.addListener('paused', () => {
-    console.log('paused', timer.props)
-
+timer.addListener('paused', event => {
+    logEvent(event)
     setTimeout(() => timer.start(), 3000)
 })
 
-timer.addListener('skipped', () => {
+timer.addListener('skipped', event => {
+    logEvent(event)
     setTimeout(() => timer.stop(), 3000)
 })
 
-timer.addListener('stopped', () => {
-    console.log('stopped', timer.props)
-
+timer.addListener('stopped', event => {
+    logEvent(event)
     setTimeout(() => timer.reset(), 1000)
 })
 
-timer.addListener('reset', () => console.log('reset', timer.props))
-
-function handler (event) {
-    console.log(event.data.attributes.name, timer.props)
-}
+timer.addListener('reset', logEvent)
 
 // session events
-timer.addListener('session.started', handler)
-timer.addListener('session.finished', handler)
+timer.addListener('session.started', logEvent)
+timer.addListener('session.finished', logEvent)
 
 // set events
-timer.addListener('set.started', handler)
-timer.addListener('set.finished', handler)
+timer.addListener('set.started', logEvent)
+timer.addListener('set.finished', logEvent)
 
 // phase events
-timer.addListener('phase.started', handler)
-timer.addListener('phase.finished', handler)
+timer.addListener('phase.started', logEvent)
+timer.addListener('phase.finished', logEvent)
 
 // custom events
-timer.addListener('alpha-reminder', handler)
-timer.addListener('bravo-reminder', handler)
-timer.addListener('set-reminder', handler)
-timer.addListener('session-reminder', handler)
+timer.addListener('alpha-reminder', logEvent)
+timer.addListener('bravo-reminder', logEvent)
+timer.addListener('set-reminder', logEvent)
+timer.addListener('session-reminder', logEvent)
 
 timer.start()
