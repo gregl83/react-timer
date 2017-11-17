@@ -5,12 +5,12 @@ import Event from './event/Event'
 import EventMeta from './event/Meta'
 
 export default class Timer extends EventEmitter {
-    constructor (config) {
+    constructor (config, interval) {
         super()
 
         this.config = new Config(config)
 
-        this.interval = new Interval
+        this.interval = interval ? interval : new Interval
         this.interval.addListener('tick', () => this.tick())
 
         this.init()

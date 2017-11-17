@@ -1,4 +1,5 @@
 import Timer from "../"
+import Interval from "../src/Interval"
 import sinon from "sinon"
 import should from "should"
 
@@ -20,6 +21,17 @@ describe('Timer', () => {
             should(timer.is(Timer.states.STOPPED)).be.false()
             done()
         }, 20)
+    })
+
+    it('supports custom intervals', () => {
+        let interval = new Interval
+        let mock = sinon.mock(interval)
+
+        mock.expects("addListener").once()
+
+        new Timer(config, interval)
+
+        mock.verify()
     })
 
     describe('events', () => {
