@@ -30,7 +30,7 @@ export default class Config {
     static createSets (config) {
         let sets = []
 
-        for (const [setIndex, set] of config.sets.entries()) {
+        config.sets.forEach((set, setIndex) => {
             let setDuration = 0
 
             for (const phase of set.phases) {
@@ -41,23 +41,23 @@ export default class Config {
             let events = Config.createEventsIndex('set', setDuration, meta, set.events)
 
             sets.push(new Set(setDuration, events))
-        }
+        })
 
         return sets
     }
     static createPhases (config) {
         let phases = []
 
-        for (const [setIndex, set] of config.sets.entries()) {
+        config.sets.forEach((set, setIndex) => {
             phases[setIndex] = []
 
-            for (const [phaseIndex, phase] of set.phases.entries()) {
+            set.phases.forEach((phase, phaseIndex) => {
                 let meta = new EventMeta(setIndex, phaseIndex)
                 let events = Config.createEventsIndex('phase', phase.duration, meta, phase.events)
 
                 phases[setIndex].push(new Phase(setIndex, phase.name, phase.duration, phase.skip, events))
-            }
-        }
+            })
+        })
 
         return phases
     }
